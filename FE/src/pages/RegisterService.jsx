@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Phone, Mail, Globe, MapPin, ImagePlus } from "lucide-react";
+import { Building2, Phone, Mail, Globe, MapPin, ImagePlus,TagIcon } from "lucide-react";
 
 const RegisterService = () => {
   const [formData, setFormData] = useState({
@@ -7,9 +7,9 @@ const RegisterService = () => {
     category: "",
     phone: "",
     email: "",
-    website: "",
     address: "",
-    city: "Bangalore",
+    pincode: "",
+    city: "Chennai",
     images: [],
   });
 
@@ -42,8 +42,8 @@ const handleSubmit = async (e) => {
   form.append("businessCategory", formData.category);
   form.append("phone", formData.phone);
   form.append("email", formData.email);
-  form.append("website", formData.website);
   form.append("address", formData.address);
+  form.append("pincode", formData.pincode);
 
   // Append each image
   formData.images.forEach((file) => {
@@ -121,7 +121,7 @@ const handleSubmit = async (e) => {
             <div className="space-y-2">
               <label className="block font-medium">Business Category</label>
               <div className="flex items-center border rounded-md px-3 py-2 bg-gray-50">
-                <Globe className="w-4 h-4 text-gray-500 mr-2" />
+                <TagIcon className="w-4 h-4 text-gray-500 mr-2" />
                 <input
                   name="category"
                   placeholder="e.g., Salon, Electrician"
@@ -170,14 +170,14 @@ const handleSubmit = async (e) => {
 
             {/* Website */}
             <div className="space-y-2">
-              <label className="block font-medium">Website (optional)</label>
+              <label className="block font-medium">Pincode </label>
               <div className="flex items-center border rounded-md px-3 py-2 bg-gray-50">
                 <Globe className="w-4 h-4 text-gray-500 mr-2" />
                 <input
-                  type="url"
-                  name="website"
-                  placeholder="https://yourbusiness.com"
-                  value={formData.website}
+                  type="text"
+                  name="pincode"
+                  placeholder="560001"
+                  value={formData.pincode}
                   onChange={handleChange}
                   className="w-full bg-transparent focus:outline-none"
                 />

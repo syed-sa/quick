@@ -6,18 +6,12 @@ const CategoriesSection = () => {
   const categories = [
     {
       id: "restaurants",
-      name: "Restaurants",
+      name: "Home food",
       icon: "🍽️",
       description: "Find the best dining spots",
       color: "from-orange-400 to-red-400",
     },
-    {
-      id: "hotels",
-      name: "Hotels",
-      icon: "🏨",
-      description: "Book comfortable stays",
-      color: "from-blue-400 to-indigo-400",
-    },
+    
     {
       id: "doctors",
       name: "Doctors",
@@ -27,7 +21,7 @@ const CategoriesSection = () => {
     },
     {
       id: "travel",
-      name: "Travel",
+      name: "Travel agencies",
       icon: "✈️",
       description: "Plan your next adventure",
       color: "from-sky-400 to-blue-400",
@@ -48,7 +42,7 @@ const CategoriesSection = () => {
     },
     {
       id: "education",
-      name: "Education",
+      name: "Learning and tutoring",
       icon: "🎓",
       description: "Learning and tutoring",
       color: "from-purple-400 to-pink-400",
@@ -82,7 +76,7 @@ const CategoriesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
           {categories.map((category) => (
             <button
               key={category.id}
