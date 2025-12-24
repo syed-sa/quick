@@ -1,4 +1,4 @@
-import HeroSection from "../components/sections/HeroSection"
+import SearchSection from "../components/sections/SearchSection"
 import CategoriesSection from "../components/sections/CategoriesSection"
 import PopularServicesSection from "../components/sections/PopularServicesSection"
 import AppDownloadSection from "../components/sections/AppDownloadSection"
@@ -6,7 +6,7 @@ import AppDownloadSection from "../components/sections/AppDownloadSection"
 const HomePage = ({ selectedCity }) => {
   return (
     <main className="flex-grow">
-      <HeroSection selectedCity={selectedCity} />
+      <SearchSection selectedCity={selectedCity} />
       <CategoriesSection />
       <PopularServicesSection />
       <AppDownloadSection />

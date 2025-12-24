@@ -10,9 +10,8 @@ public class RegisterBusinessDto {
     public long businessCategoryId;
     public String phone;
     public String email;
-    public String website;
     public String address;
-    public int postalCode;
+    public String postalCode;
     public MultipartFile[] images;
 
     public RegisterBusinessDto() {
@@ -59,13 +58,7 @@ public class RegisterBusinessDto {
         this.email = email;
     }
 
-    public String getWebsite() {
-        return website;
-    }
 
-    public void setWebsite(String website) {
-        this.website = website;
-    }
 
     public String getAddress() {
         return address;
@@ -91,11 +84,11 @@ public class RegisterBusinessDto {
         this.images = images;
     }
 
-    public int getPostalCode() {
+    public String getPostalCode() {
         return postalCode;
     }
 
-    public void setPostalCode(int postalCode) {
+    public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
     }
 }

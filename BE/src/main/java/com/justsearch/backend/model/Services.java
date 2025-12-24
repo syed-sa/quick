@@ -1,6 +1,9 @@
 package com.justsearch.backend.model;
 
+import java.util.List;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -10,8 +13,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+
 @Entity
-@Table(name = "services", uniqueConstraints = @UniqueConstraint(columnNames = { "service_provider_id", "company_name" }))
+@Table(name = "services", uniqueConstraints = @UniqueConstraint(columnNames = { "service_provider_id",
+        "company_name" }))
 public class Services {
 
     @Id
@@ -35,12 +40,19 @@ public class Services {
 
     private String email;
 
-    private String website;
-
     private String address;
 
     private String postalCode;
+    @ElementCollection  
+    private List<String> keywords;
 
+
+    public List<String> getKeywords() {
+        return keywords;
+    }
+    public void setKeywords(List<String> keywords) {
+        this.keywords = keywords;
+    }
     public String getCompanyName() {
         return companyName;
     }
@@ -79,14 +91,6 @@ public class Services {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getWebsite() {
-        return website;
-    }
-
-    public void setWebsite(String website) {
-        this.website = website;
     }
 
     public String getAddress() {

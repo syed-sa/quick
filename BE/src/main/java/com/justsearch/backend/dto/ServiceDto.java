@@ -1,4 +1,8 @@
 package com.justsearch.backend.dto;
+
+import java.util.List;
+
+    
 public class ServiceDto {
     private long id;
     private long userId;
@@ -7,9 +11,17 @@ public class ServiceDto {
     private long businessCategoryId;
     private String phone;
     private String email;
-    private String website;
     private String address;
     private String postalCode;
+    private List<String> keywords;
+
+    public List<String> getKeywords() {
+        return keywords;
+    }
+    public void setKeywords(List<String> keywords) {
+        this.keywords = keywords;
+    }
+
 
     public String getCompanyName() {
         return companyName;
@@ -51,13 +63,6 @@ public class ServiceDto {
         this.email = email;
     }
 
-    public String getWebsite() {
-        return website;
-    }
-
-    public void setWebsite(String website) {
-        this.website = website;
-    }
 
     public String getAddress() {
         return address;

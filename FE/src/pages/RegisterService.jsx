@@ -63,7 +63,7 @@ const handleSubmit = async (e) => {
       alert("Business registered successfully!");
     } else {
       const error = await res.text();
-      alert("Failed: " + error);
+      alert(error);
     }
   } catch (err) {
     console.error("Error submitting form:", err);

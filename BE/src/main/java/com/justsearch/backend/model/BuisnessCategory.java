@@ -1,4 +1,7 @@
 package com.justsearch.backend.model;
+import java.util.List;
+
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,6 +13,8 @@ public class BuisnessCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
     public String name;
+    @ElementCollection
+    public List<String> keywords;
 
     public BuisnessCategory() {
     }
@@ -24,5 +29,11 @@ public class BuisnessCategory {
 
     public void setName(String name) {
         this.name = name;
+    }
+    public List<String> getKeywords() {
+        return keywords;
+    }
+    public void setKeywords(List<String> keywords) {
+        this.keywords = keywords;
     }
 }
