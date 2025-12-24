@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 import { MapPin, User, Bell, Heart, Store, Menu, X, Shield } from "lucide-react";
-import {toast} from "react-toastify";
 
 const Header = ({ selectedCity, setSelectedCity }) => {
   const { user, logout } = useAuth();
@@ -66,14 +65,7 @@ const NavItems = ({ user, logout, selectedCity, setSelectedCity, isMobile = fals
     {/* Location Selector */}
     <div className="flex items-center text-gray-600">
       <MapPin className="h-4 w-4 mr-1" />
-      <select
-        className="bg-transparent border-none focus:outline-none text-sm"
-        value={selectedCity}
-        onChange={(e) => setSelectedCity(e.target.value)}
-      >
-        <option>Bangalore</option>
-        <option>Chennai</option>
-      </select>
+      Chennai
       
     </div>
 

@@ -44,12 +44,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <a href="#" className="text-gray-400 hover:text-white">
-                  Restaurants
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white">
-                  Hotels
+                  Home Food
                 </a>
               </li>
               <li>
@@ -102,11 +97,6 @@ const Footer = () => {
                   Privacy Policy
                 </a>
               </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-white">
-                  Careers
-                </a>
-              </li>
             </ul>
           </div>
           <div>
@@ -114,11 +104,11 @@ const Footer = () => {
             <div className="space-y-3">
               <p className="flex items-start">
                 <span className="mr-2">📍</span>
-                <span className="text-gray-400">123 Business Avenue, Mumbai, India 400001</span>
+                <span className="text-gray-400">Dream park, Choolaimedu, Chennai, Tamil Nadu 600094</span>
               </p>
               <p className="flex items-start">
                 <Phone className="h-5 w-5 mr-2 text-gray-400" />
-                <span className="text-gray-400">+91 1234567890</span>
+                <span className="text-gray-400">+91 9876543210</span>
               </p>
               <p className="flex items-start">
                 <span className="mr-2">✉️</span>

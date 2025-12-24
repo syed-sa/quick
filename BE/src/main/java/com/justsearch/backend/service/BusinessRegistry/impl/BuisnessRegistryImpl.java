@@ -154,7 +154,6 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
     public List<String> getImages(long serviceId) {
         try {
             Path path = Path.of(basePath, AppConstants.USER_DATA, AppConstants.IMAGE_FOLDER, String.valueOf(serviceId));
-
             if (!Files.exists(path)) {
                 throw new IllegalArgumentException("Folder does not exist for service ID: " + serviceId);
             }

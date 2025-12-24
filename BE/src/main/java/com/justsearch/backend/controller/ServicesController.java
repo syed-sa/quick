@@ -14,9 +14,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.justsearch.backend.dto.CategorySuggestionDto;
 import com.justsearch.backend.dto.RegisterBusinessDto;
 import com.justsearch.backend.dto.ServiceDto;
 import com.justsearch.backend.service.BusinessRegistry.BuisnessRegistry;
+import com.justsearch.backend.service.BusinessRegistry.BusinessCategoryService;
+
 import org.springframework.data.domain.Page;
 
 @RestController
@@ -25,9 +29,11 @@ import org.springframework.data.domain.Page;
 public class ServicesController {
 
     public BuisnessRegistry _registerServicesService;
+    public BusinessCategoryService _categoryService;
 
-    public ServicesController(BuisnessRegistry registerServicesService) {
+    public ServicesController(BuisnessRegistry registerServicesService, BusinessCategoryService categoryService) {
         this._registerServicesService = registerServicesService;
+        this._categoryService = categoryService;
     }
 
     @PostMapping(value = "/register", consumes = "multipart/form-data")
@@ -99,4 +105,10 @@ public class ServicesController {
         }
     }
 
+    @GetMapping("/category/suggestions")
+    public List<CategorySuggestionDto> getCategorySuggestions(
+            @RequestParam String q) {
+        return _categoryService.getSuggestions(q);
+    }
 }
+

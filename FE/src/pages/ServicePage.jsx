@@ -28,7 +28,7 @@ const ServicesPage = () => {
         const response = await api.get(
           "http://localhost:8080/api/services/getByCategory",
           {  headers: {
-              Authorization: `Bearer ${token}`, // ✅ Access token here
+              Authorization: `Bearer ${token}`, 
             },
             params: {
               keyWord,
@@ -40,6 +40,8 @@ const ServicesPage = () => {
         );
 
         const pageData = response.data;
+        console.log("Services from API:", pageData.content);
+
         setServices(pageData.content || []);
       } catch (error) {
         console.error("Error fetching services:", error);

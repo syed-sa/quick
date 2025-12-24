@@ -24,4 +24,13 @@ public interface CategoryRepository extends JpaRepository<BuisnessCategory, Long
     // 2. FOR SELECTION: Finds the specific category once a keyword is picked
     @Query("SELECT c FROM BuisnessCategory c WHERE :selectedKeyword MEMBER OF c.keywords")
     Optional<BuisnessCategory> findByExactKeyword(@Param("selectedKeyword") String selectedKeyword);
+
+        @Query("""
+        SELECT DISTINCT c
+        FROM BuisnessCategory c
+        JOIN c.keywords k
+        WHERE LOWER(k) LIKE LOWER(CONCAT('%', :query, '%'))
+           OR LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))
+    """)
+    List<BuisnessCategory> findMatchingCategories(@Param("query") String query);
 }

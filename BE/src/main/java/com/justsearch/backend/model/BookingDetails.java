@@ -23,6 +23,14 @@ public class BookingDetails {
     private String description;
     private boolean isActive = true;
     private String location;
+    private String postalCode;
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
+    }
 
     public String getLocation() {
         return location;
