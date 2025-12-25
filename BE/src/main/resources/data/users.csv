@@ -1,0 +1,22 @@
+name,email,phone,password,roles
+Tiffit Provider,tiffitprovider@tiffit.com,04412345678,123456,USER
+Vadumangai Provider,vadumangaiprovider@vadumangai.com,09840012345,123456,USER
+Maavadu Provider,maavaduprovider@maavadu.in,04428512345,123456,USER
+Dhivi Kitchen Provider,dhiviprovider@dhivikitchen.com,09841234567,123456,USER
+DailyBox Provider,dailyboxprovider@dailybox.co.in,04440012345,123456,USER
+Selvarangam Admin,info@selvarangamhospital.com,0442626121,123456,USER
+Rathimed Admin,info@rathimedhospital.com,04426261212,123456,USER
+Vihaa Hospital Admin,vihaahospital2017@gmail.com,09710400000,123456,USER
+Ortho Inde Admin,reachus@orthoindehospital.in,09840079008,123456,USER
+Dr Vijay Admin,drvijayshospital1@gmail.com,09840731328,123456,USER
+Olive Tours Admin,bookings@oliveltours.com,08122121311,123456,USER
+Chennai Travels Admin,contact@chennaitravels.in,07550078781,123456,USER
+AK Travel Admin,aktravelss@gmail.com,04448599566,123456,USER
+Anna Nagar Auto Admin,info@annanagarautoservice.com,984567231,123456,USER
+GoMechanic Admin,gomechanicprovider@gomechanic.in,904531267,123456,USER
+HomeTriangle Admin,info@hometriangle.com,983524337,123456,USER
+M Tutor Admin,info@m-tutor.com,08754548384,123456,USER
+Perfect Tutor Admin,info@perfecttutor.in,,123456,USER
+Alwayscool Admin,9884699911@alwayscool.in,09884699911,123456,USER
+ServiceTree Admin,info@servicetree.in,504440114081,123456,USER
+Fast Help Admin,info@fasthelp.in,212453689,123456,USER

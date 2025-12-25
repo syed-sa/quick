@@ -28,7 +28,7 @@ public class ServiceDto {
     }
 
     public void setCompanyName(String companyName) {
-        this.companyName = companyName.toUpperCase().replaceAll(" ", "_");
+         this.companyName = companyName;
     }
 
     public String getCity() {

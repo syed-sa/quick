@@ -16,7 +16,7 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -28,34 +28,36 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.response.use(
-  res => res,
-  async err => {
+  (res) => res,
+  async (err) => {
     const originalRequest = err.config;
 
-    if ((err.response?.status === 401 || err.response?.status === 403) && !originalRequest._retry) {
+    if (
+      (err.response?.status === 401 || err.response?.status === 403) &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
-        })
-          .then(token => {
-            originalRequest.headers.Authorization = 'Bearer ' + token;
-            return api(originalRequest);
-          });
+        }).then((token) => {
+          originalRequest.headers.Authorization = "Bearer " + token;
+          return api(originalRequest);
+        });
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
       const refreshToken = localStorage.getItem("refreshToken");
       try {
-  const response = await axios.post(
-    "http://localhost:8080/api/user/refresh",
-    refreshToken, // send it directly as the request body
-    {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    }
-  );
+        const response = await axios.post(
+          "http://localhost:8080/api/user/refresh",
+          { refreshToken },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         const newToken = response.data.accessToken;
         localStorage.setItem("token", newToken);

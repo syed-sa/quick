@@ -18,7 +18,7 @@ public class RegisterBusinessDto {
     }
 
     public String getCompanyName() {
-        return companyName.toUpperCase().replaceAll(" ", "_");
+        return companyName;
     }
 
     public void setCompanyName(String companyName) {

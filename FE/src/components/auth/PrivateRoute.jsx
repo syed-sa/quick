@@ -2,9 +2,11 @@ import { useAuth } from "../../context/AuthContext";
 import { Navigate } from "react-router-dom";
 
 const PrivateRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  // If not logged in, redirect to login
+  // Wait until user state is restored
+  if (loading) return <div>Loading...</div>;
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }

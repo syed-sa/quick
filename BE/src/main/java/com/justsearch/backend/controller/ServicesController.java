@@ -62,6 +62,7 @@ public class ServicesController {
             @RequestParam(defaultValue = "10") int size) {
         try {
             Page<ServiceDto> services = _registerServicesService.getResults(keyWord, postalCode, page, size);
+            services.getContent().forEach(service -> System.out.println("Company Name: " + service.getCompanyName()));
             return ResponseEntity.ok(services);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

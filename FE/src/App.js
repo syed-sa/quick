@@ -39,14 +39,14 @@
       <Routes>
         <Route path="/" element={<HomePage selectedCity={selectedCity} />} />
         <Route path="/auth" element={<AuthForm />} />
-        <Route path="/favourites" element={<Favorites />} />
-        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/favourites" element={  <Favorites />} />
+        <Route path="/profile" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/service/:id" element={<ServiceDetailPage />} />
-        <Route path="/business-profile" element={<BusinessProfile />} />
-        <Route path="/booking-management" element={<BookingManagement />} />
-        <Route path="/notifications" element={<NotificationPage />} />
-        <Route path="/admin" element = {<AdminDashboard/>} />
+        <Route path="/business-profile" element={<PrivateRoute><BusinessProfile /></PrivateRoute>} />
+        <Route path="/booking-management" element={<PrivateRoute><BookingManagement /></PrivateRoute>} />
+        <Route path="/notifications" element={<PrivateRoute><NotificationPage /></PrivateRoute>} />
+        <Route path="/admin" element = { <PrivateRoute><AdminDashboard/></PrivateRoute>} />
 
         <Route
           path="/register-service"
