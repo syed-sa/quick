@@ -1,19 +1,19 @@
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 const CategoriesSection = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null);
-
+  const navigate = useNavigate();
   const categories = [
     {
-      id: "restaurants",
+      id: "Home food",
       name: "Home food",
       icon: "🍽️",
       description: "Find the best dining spots",
       color: "from-orange-400 to-red-400",
     },
-    
+
     {
-      id: "doctors",
+      id: "Doctors",
       name: "Doctors",
       icon: "👨‍⚕️",
       description: "Healthcare professionals",
@@ -27,21 +27,21 @@ const CategoriesSection = () => {
       color: "from-sky-400 to-blue-400",
     },
     {
-      id: "auto-services",
+      id: "Car Service",
       name: "Auto Services",
       icon: "🚗",
       description: "Car repair and maintenance",
       color: "from-gray-400 to-slate-400",
     },
     {
-      id: "home-services",
+      id: "Home Services",
       name: "Home Services",
       icon: "🔧",
       description: "Fix and maintain your home",
       color: "from-yellow-400 to-orange-400",
     },
     {
-      id: "education",
+      id: "Learning and tutoring",
       name: "Learning and tutoring",
       icon: "🎓",
       description: "Learning and tutoring",
@@ -49,9 +49,10 @@ const CategoriesSection = () => {
     },
   ];
 
-  const handleCategoryClick = (categoryId) => {
-    console.log(`Navigating to ${categoryId} category`);
-    // Add your navigation logic here
+  const handleCategoryClick = (category) => {
+    navigate(
+      `/services?view=category&category=${encodeURIComponent(category)}`
+    );
   };
 
   return (
