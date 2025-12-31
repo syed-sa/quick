@@ -12,7 +12,7 @@ const Header = ({ selectedCity, setSelectedCity }) => {
   <div className="w-full flex items-center justify-between px-4 md:px-8 py-4">
     {/* Logo now fully left */}
     <Link to="/" className="text-2xl font-bold text-yellow-500">
-      <span className="text-red-500">Quick</span>
+      <span className="text-3xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">Quick</span>
     </Link>
 
     {/* Mobile Toggle */}
