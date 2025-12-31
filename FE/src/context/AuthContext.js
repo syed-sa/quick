@@ -52,8 +52,6 @@ export const AuthProvider = ({ children }) => {
     const userId = localStorage.getItem("userId");
     const role = localStorage.getItem("role");
     if (token) {
-      console.log("TOKEN:", token);
-      console.log("DECODED:", jwtDecode(token));
 
       try {
         const decoded = jwtDecode(token);
