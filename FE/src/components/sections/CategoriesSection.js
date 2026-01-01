@@ -29,7 +29,7 @@ const CategoriesSection = () => {
     {
       id: "Car Service",
       name: "Auto Services",
-      icon: "🚗",
+      icon: "🏎️",
       description: "Car repair and maintenance",
       color: "from-gray-400 to-slate-400",
     },
