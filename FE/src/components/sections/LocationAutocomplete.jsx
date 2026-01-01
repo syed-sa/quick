@@ -34,7 +34,7 @@ export default function LocationAutocomplete({ onSelect }) {
       <input
         type="text"
         value={query}
-        placeholder="Enter area in Chennai"
+        placeholder="Enter pin code"
         onChange={(e) => setQuery(e.target.value)}
         className="w-full px-3 py-2 rounded-md border border-gray-300  focus:outline-none text-sm text-gray-700"
       />
