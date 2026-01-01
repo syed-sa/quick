@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Clock, Camera } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Clock, Camera, Star, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ServiceCard = ({ service }) => {
   const [images, setImages] = useState([]);
   const [loadingImages, setLoadingImages] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const navigate = useNavigate();
-const handleViewDetails = (service, images) => {
-  navigate(`/service/${service.id}`, { state: { service,images } }); //service detail page is called here passing the service
-};
+
+  const handleViewDetails = () => {
+    navigate(`/service/${service.id}`, {
+      state: { service, images },
+    });
+  };
+
   useEffect(() => {
     const fetchImages = async () => {
       try {
@@ -22,7 +26,7 @@ const handleViewDetails = (service, images) => {
             },
           }
         );
-        
+
         if (response.ok) {
           const imageData = await response.json();
           setImages(Array.isArray(imageData) ? imageData : []);
@@ -34,110 +38,99 @@ const handleViewDetails = (service, images) => {
       }
     };
 
-    if (service.id) {
-      fetchImages();
-    } else {
-      setLoadingImages(false);
-    }
+    if (service.id) fetchImages();
   }, [service.id]);
 
   const nextImage = () => {
-    if (images.length > 0) {
+    if (images.length > 1) {
       setCurrentImageIndex((prev) => (prev + 1) % images.length);
     }
   };
 
   const prevImage = () => {
-    if (images.length > 0) {
+    if (images.length > 1) {
       setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
     }
   };
 
+return (
+  <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 group">
+    {/* IMAGE SECTION */}
+    <div className="relative h-56 overflow-hidden">
+      {loadingImages ? (
+        <div className="h-full w-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
+      ) : images.length > 0 ? (
+        <>
+          <img
+            src={images[currentImageIndex]}
+            alt={service.companyName}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => {
+              e.target.src = "";
+            }}
+          />
 
+          {/* IMAGE CONTROLS */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={prevImage}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 text-gray-800 p-1.5 rounded-full hover:bg-white transition opacity-0 group-hover:opacity-100"
+              >
+                ‹
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 text-gray-800 p-1.5 rounded-full hover:bg-white transition opacity-0 group-hover:opacity-100"
+              >
+                ›
+              </button>
 
-  return (
-  <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group">
-      {/* Image Section */}
-    <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 relative overflow-hidden">
-         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      <div className="absolute bottom-4 left-4 text-white font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <button 
-onClick={() => handleViewDetails(service, images)}          
->
-          View Details
-        </button>
-      </div>
-        {loadingImages ? (
-          <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </div>
-        ) : images.length > 0 ? (
-          <>
-            <img
-              src={images[currentImageIndex]}
-              alt={service.serviceName || service.name || 'Service'}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                // Fallback to placeholder image on error
-                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTAwTDEyMCA4MEwxNDAgMTAwTDEyMCAxMjBMMTAwIDEwMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
-              }}
-            />
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={prevImage}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75 transition-opacity"
-                  aria-label="Previous image"
-                >
-                  ←
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75 transition-opacity"
-                  aria-label="Next image"
-                >
-                  →
-                </button>
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
-                  {currentImageIndex + 1} / {images.length}
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <Camera className="h-12 w-12" />
-          </div>
-        )}
-      </div>
-
-      {/* Content Section */}
-     <div className="p-6 space-y-3">
-      <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">
-        </h3>
-          <h3 className="font-bold text-lg text-gray-800 group-hover:text-orange-600 transition-colors">
-        {service.companyName || 'Service Name'}
-      </h3>
-        
-        <p className="text-gray-600 text-sm line-clamp-2">
-        {service.description || 'Professional service description goes here...'}
-      </p>
-
-     <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-2 text-orange-500 flex-shrink-0" />
-              <span className="line-clamp-1">{service.workingHours||"9-5"}</span>
-            </div>
-        <span className="text-sm text-gray-500">
-          ⭐ {service.rating || '4.8'}
-        </span>
+              <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                {currentImageIndex + 1}/{images.length}
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <div className="flex items-center justify-center h-full bg-gray-50">
+          <Camera className="h-12 w-12 text-gray-300" />
         </div>
-
-        {/* Action Button */}
-       
+      )}
+      
+      {/* RATING BADGE */}
+      <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm">
+        <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+        <span className="text-sm font-semibold text-gray-900">{service.rating || "4.8"}</span>
       </div>
     </div>
-  );
+
+    {/* CONTENT SECTION */}
+    <div className="p-5">
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.companyName}</h3>
+      
+      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        {service.description || "Professional service provider offering quality solutions."}
+      </p>
+
+      {/* INFO */}
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center text-sm text-gray-600">
+          <Clock className="h-4 w-4 mr-2 text-orange-500" />
+          {service.workingHours || "9 AM - 5 PM"}
+        </div>
+      </div>
+
+      {/* BUTTON */}
+      <button
+        onClick={handleViewDetails}
+        className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-lg transition-colors"
+      >
+        View Details <ArrowRight size={16} />
+      </button>
+    </div>
+  </div>
+);
 };
 
 export default ServiceCard;
