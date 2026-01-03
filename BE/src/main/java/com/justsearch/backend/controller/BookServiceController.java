@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.justsearch.backend.dto.BookingDetailsDto;
-import com.justsearch.backend.service.ServiceBooking.BookService;
+import com.justsearch.backend.service.QuickServices.BookService;
 
 @RestController
 @RequestMapping("api/bookservice")
