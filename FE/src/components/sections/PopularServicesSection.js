@@ -12,7 +12,7 @@ const PopularServicesSection = () => {
     { id: "Electrical", name: "Electrical", image: "/images/electrician.png" },
     { id: "House Cleaning", name: "House Cleaning", image: "/images/cleaning.jpg" },
     { id: "Car Service", name: "Car Service", image: "/images/car-service.png" },
-    { id: "Packers & Movers", name: "Packers & Movers", image: "/images/packers-movers.png" },
+    { id: "Packers and Movers", name: "Packers & Movers", image: "/images/packers-movers.png" },
   ];
 
   const handleImageError = (serviceId) => {
