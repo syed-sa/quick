@@ -19,7 +19,7 @@
   import { useNotificationSocket } from "./hooks/useNotificationSocket";
 
   function App() {
-    const [selectedCity, setSelectedCity] = useState("Mumbai");
+    const [selectedCity, setSelectedCity] = useState("Chennai");
     useNotificationSocket();
 
   return (
