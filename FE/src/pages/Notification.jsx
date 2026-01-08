@@ -78,9 +78,7 @@ const NotificationPage = () => {
   };
 
   const markAllAsRead = () => {
-    setNotifications(
-      notifications.map((notif) => ({ ...notif, isRead: true }))
-    );
+    setNotifications(notifications.map((notif) => ({ ...notif, read: true })));
   };
 
   const filteredNotifications = notifications.filter((notif) => {
