@@ -1,4 +1,5 @@
 package com.justsearch.backend.repository;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -9,17 +10,21 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.justsearch.backend.model.RefreshToken;
+
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
 
     Optional<RefreshToken> findByToken(String token);
 
-    void deleteByToken(String token);
+    @Modifying
+    @Query("update RefreshToken r set r.isRevoked = true where r.token = :token")
+    void revokeToken(@Param("token") String token);
 
     @Modifying
-    @Query("UPDATE RefreshToken rt SET rt.isRevoked = true WHERE rt.userId = :userId")
-    void revokeAllUserTokens(@Param("userId") long userId);
+    @Query("delete from RefreshToken r where r.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
+
 
     @Modifying
     @Query("DELETE FROM RefreshToken rt WHERE rt.expiryDate < :now")
