@@ -1,5 +1,6 @@
 package com.justsearch.backend.service.Authentication.impl;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -116,37 +117,58 @@ public class AuthServiceImpl implements AuthService {
 
     @Transactional
     public ResponseEntity<TokenResponseDto> refresh(String refreshToken) {
-        if (jwtUtils.validateRefreshToken(refreshToken)) {
-            long userId = jwtUtils.getUserIdFromRefreshToken(refreshToken);
-            User user = _userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            _refreshTokenRepository.deleteByToken(refreshToken);
-            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                    user.getEmail(),
-                    user.getPassword(),
-                    user.getRoles().stream()
-                            .map(role -> new SimpleGrantedAuthority(role.getName()))
-                            .toList());
-            Authentication auth = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            String newAccessToken = jwtUtils.generateToken(auth);
-            RefreshToken newRefreshToken = jwtUtils.generateRefreshToken(user.getId());
-            String role = user.getRoles().stream()
-                    .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN")) ? "ADMIN" : "USER";
 
-            TokenResponseDto tokenResponse = new TokenResponseDto(
-                    user.getName(),
-                    newAccessToken,
-                    newRefreshToken.getToken(),
-                    user.getId(),
-                    role // pass the role string here
-            );
+        Optional<RefreshToken> storedTokenOpt = _refreshTokenRepository.findByToken(refreshToken);
 
-            _refreshTokenRepository.save(newRefreshToken);
-            return ResponseEntity.ok(tokenResponse);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        // Token not found → reuse or invalid
+        if (storedTokenOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
+        RefreshToken storedToken = storedTokenOpt.get();
+
+        // Expired or already used → real security issue
+        if (storedToken.isRevoked() || storedToken.getExpiryDate().before(new Date())) {
+            // cleanup all tokens for this user
+            _refreshTokenRepository.deleteAllByUserId(storedToken.getUserId());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // ✅ Mark old refresh token as USED (revoked)
+        storedToken.setRevoked(true);
+        _refreshTokenRepository.save(storedToken);
+
+        // Load user
+        User user = _userRepository.findById(storedToken.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Build authentication
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                user.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                        .toList());
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+
+        // Generate new tokens
+        String newAccessToken = jwtUtils.generateToken(auth);
+        RefreshToken newRefreshToken = jwtUtils.generateRefreshToken(user.getId());
+
+        _refreshTokenRepository.save(newRefreshToken);
+
+        String role = user.getRoles().stream()
+                .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN")) ? "ADMIN" : "USER";
+
+        return ResponseEntity.ok(
+                new TokenResponseDto(
+                        user.getName(),
+                        newAccessToken,
+                        newRefreshToken.getToken(),
+                        user.getId(),
+                        role));
     }
 
     public void logout(String refreshToken) {

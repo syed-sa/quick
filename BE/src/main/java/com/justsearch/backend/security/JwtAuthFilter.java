@@ -1,4 +1,5 @@
 package com.justsearch.backend.security;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,20 +13,19 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtils jwtUtils;
-     @Autowired
+    @Autowired
     private CustomUserDetailsService userDetailsService;
 
     public JwtAuthFilter(JwtUtils jwtUtils, CustomUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
         this.jwtUtils = jwtUtils;
     }
-
- 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -34,8 +34,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = null;
         String email = null;
-
-        
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
@@ -46,8 +44,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
             if (jwtUtils.validateToken(token)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, SecurityContextHolder.getContext().getAuthentication(), userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
+                        SecurityContextHolder.getContext().getAuthentication(), userDetails.getAuthorities());
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -56,14 +54,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
     @Override
-protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-    String path = request.getRequestURI();
-    
-    // Skip JWT processing for public endpoints like refresh, signin, signup
-    return path.equals("/api/user/refresh") ||
-           path.equals("/api/user/signin") ||
-           path.equals("/api/user/signup");
-}
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+
+        // Skip JWT processing for public endpoints like refresh, signin, signup
+        return path.equals("/api/user/refresh") ||
+                path.equals("/api/user/signin") ||
+                path.equals("/api/user/signup");
+    }
 
 }
