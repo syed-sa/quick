@@ -38,7 +38,7 @@ public class JwtUtils {
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
-                .claim("roles", roles) 
+                .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(secretKey, SignatureAlgorithm.HS512)
@@ -54,17 +54,17 @@ public class JwtUtils {
 
     public String extractUsername(String token) {
         return Jwts
-                .parserBuilder()
-                .setSigningKey(secretKey)
+                .parser()
+                .verifyWith((javax.crypto.SecretKey) secretKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
+                .parseSignedClaims(token)
+                .getPayload()
                 .getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+            Jwts.parser().verifyWith((javax.crypto.SecretKey) secretKey).build().parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
