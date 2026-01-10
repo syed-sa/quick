@@ -29,20 +29,27 @@ const ProfilePage = () => {
   });
 
   useEffect(() => {
-    api.get("user/myProfile").then((res) => {
-      setFormData({
-        name: res.data.name,
-        email: res.data.email,
-        phone: res.data.phone,
-        city: res.data.city || "Chennai",
-      });
-      setProfile({
-        name: res.data.name,
-        email: res.data.email,
-        phone: res.data.phone,
-        city: res.data.city || "Chennai",
-      });
-    });
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get("user/myProfile");
+        setFormData({
+          name: res.data.name,
+          email: res.data.email,
+          phone: res.data.phone,
+          city: res.data.city || "Chennai",
+        });
+        setProfile({
+          name: res.data.name,
+          email: res.data.email,
+          phone: res.data.phone,
+          city: res.data.city || "Chennai",
+        });
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+        toast.error("Failed to load profile");
+      }
+    };
+    fetchProfile();
   }, []);
 
   const handleChange = (e) => {
