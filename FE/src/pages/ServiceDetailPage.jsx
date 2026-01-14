@@ -9,10 +9,12 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Heart,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../components/auth/axios";
 import BookingCard from "../components/sections/BookService";
+
 const ServiceDetailPage = () => {
   const { id } = useParams();
   const { state } = useLocation();
@@ -22,9 +24,12 @@ const ServiceDetailPage = () => {
   const [loading, setLoading] = useState(!state?.service);
   const [images] = useState(state?.images || null);
   const [showBooking, setShowBooking] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
-  // Mock data for demonstration - replace with actual service data
-
+  const userId = parseInt(localStorage.getItem("userId"), 10);
+  const token = localStorage.getItem("token");
+console.log(id);
   const mockReviews = [
     {
       id: 1,
@@ -52,20 +57,41 @@ const ServiceDetailPage = () => {
     },
   ];
 
+  // Check if service is in favorites
+  useEffect(() => {
+          if (!userId || !id || !token) return;
+    const checkFavoriteStatus = async () => {
+
+      
+      try {
+        const response = await api.get(`/users/${userId}/favorites`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.status === 200) {
+          const favorites = response.data;
+          setIsFavorite(favorites.some(fav => fav.id === parseInt(id)));
+        }
+      } catch (error) {
+        console.error("Error checking favorite status:", error);
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [userId, id, token]);
+
   // Fetch service data if not available from navigation state
   useEffect(() => {
     if (!service && id) {
       const fetchService = async () => {
-        const token = localStorage.getItem("token");
         try {
-          const response = await api.get(
-            `http://localhost:8080/api/services/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          const response = await api.get(`/services/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           if (response.status === 200) {
             setService(response.data);
           } else {
@@ -82,7 +108,43 @@ const ServiceDetailPage = () => {
       };
       fetchService();
     }
-  }, [id, service, navigate]);
+  }, [id, service, navigate, token]);
+
+  // Toggle favorite status
+  const toggleFavorite = async () => {
+    if (!userId) {
+      toast.error("Please login to add favorites");
+      return;
+    }
+
+    setFavoriteLoading(true);
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        await api.delete(`/users/${userId}/favorites/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setIsFavorite(false);
+        toast.success("Removed from favorites");
+      } else {
+        // Add to favorites
+        await api.post(`/users/${userId}/favorites/${id}`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setIsFavorite(true);
+        toast.success("Added to favorites");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Failed to update favorites. Please try again.");
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -143,13 +205,29 @@ const ServiceDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200"
           >
             <ChevronLeft className="w-5 h-5 mr-1" />
             Back
+          </button>
+          
+          {/* Favorite Button */}
+          <button
+            onClick={toggleFavorite}
+            disabled={favoriteLoading}
+            className={`inline-flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+              isFavorite
+                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            } ${favoriteLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <Heart
+              className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`}
+            />
+            <span>{isFavorite ? "Saved" : "Save to Favorites"}</span>
           </button>
         </div>
       </div>
@@ -160,18 +238,22 @@ const ServiceDetailPage = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Business Name & Location */}
             <div className="bg-white rounded-3xl shadow-xl p-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                {service.companyName || "Premium Business Services"}
-              </h1>
-              <div className="flex items-center text-gray-600 mb-2">
-                <MapPin className="w-5 h-5 mr-3 text-blue-500" />
-                <span className="text-lg">
-                  {service.address ||
-                    "123 Business District, Professional Plaza"}
-                </span>
-              </div>
-              <div className="text-gray-500">
-                {service.city || "Downtown"} - {service.postalCode || "12345"}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                    {service.companyName || "Premium Business Services"}
+                  </h1>
+                  <div className="flex items-center text-gray-600 mb-2">
+                    <MapPin className="w-5 h-5 mr-3 text-blue-500" />
+                    <span className="text-lg">
+                      {service.address ||
+                        "123 Business District, Professional Plaza"}
+                    </span>
+                  </div>
+                  <div className="text-gray-500">
+                    {service.city || "Downtown"} - {service.postalCode || "12345"}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -253,7 +335,7 @@ const ServiceDetailPage = () => {
             {/* Reviews */}
             <div className="bg-white rounded-3xl shadow-xl p-8">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-l font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900">
                   Customer Reviews
                 </h2>
                 <div className="flex items-center space-x-2">
@@ -292,7 +374,7 @@ const ServiceDetailPage = () => {
                         {review.date}
                       </span>
                     </div>
-                    <p className="text-0.5xl text-gray-700 leading-relaxed">
+                    <p className="text-base text-gray-700 leading-relaxed">
                       {review.comment}
                     </p>
                   </div>
@@ -304,16 +386,13 @@ const ServiceDetailPage = () => {
           {/* Right Column - Contact & Booking */}
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-8">
-              {/* Contact Information */}
-             
-
               {/* Book Service Button */}
               <div className="bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl shadow-xl p-8">
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-white mb-4">
                     Ready to Get Started?
                   </h3>
-                  <p className="text-blue-100 mb-6">
+                  <p className="text-white mb-6">
                     Book our premium services today and experience the
                     difference.
                   </p>
@@ -324,7 +403,7 @@ const ServiceDetailPage = () => {
                     <Calendar className="w-5 h-5" />
                     <span>Request Service Now</span>
                   </button>
-                  <p className="text-blue-200 text-sm mt-4">
+                  <p className="text-white text-sm mt-4">
                     Free consultation • Quick response • Professional service
                   </p>
                 </div>
@@ -333,7 +412,7 @@ const ServiceDetailPage = () => {
               {/* Booking Modal - Shown Conditionally */}
               {showBooking && (
                 <BookingCard
-                  customerId={parseInt(localStorage.getItem("userId"), 10)}
+                  customerId={userId}
                   serviceId={service.id}
                   serviceName={service.companyName}
                   onClose={() => setShowBooking(false)}
@@ -343,7 +422,7 @@ const ServiceDetailPage = () => {
               {/* Additional CTA */}
               <div className="bg-white rounded-3xl shadow-xl p-6 text-center">
                 <p className="text-gray-600 mb-4">Need a custom quote?</p>
-                <button className="text-black-600 hover:text-black-700 font-semibold transition-colors duration-200">
+                <button className="text-orange-600 hover:text-orange-700 font-semibold transition-colors duration-200">
                   Request Custom Quote →
                 </button>
               </div>
