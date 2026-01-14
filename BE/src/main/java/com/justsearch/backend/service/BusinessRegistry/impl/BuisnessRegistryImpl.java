@@ -107,46 +107,7 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
         }
     }
 
-    /// Get global keyword suggestions from both categories and services
-    /// @param query The input query string for suggestions
-    /// @return A list of up to 10 unique keyword suggestions
-
-    public List<String> getGlobalSuggestions(String query) {
-
-        String cleanQuery = query.trim().toLowerCase();
-
-        // 2. Fetch from both sources with a strict limit (Top 10 from each)
-        // We use Limit.of(10) to prevent deep database scanning
-        List<String> catKeywords = _categoryRepository.findKeywordSuggestions(
-                cleanQuery,
-                PageRequest.of(0, 10));
-
-        List<String> serviceKeywords = _servicesRepository.findKeywordSuggestions(
-                cleanQuery,
-                PageRequest.of(0, 10));
-
-        // 3. Merge into a Set to remove duplicates
-        // TreeSet with CASE_INSENSITIVE_ORDER keeps them alphabetical
-        Set<String> combinedResults = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-
-        combinedResults.addAll(catKeywords);
-        combinedResults.addAll(serviceKeywords);
-
-        return combinedResults.stream()
-                .limit(10)
-                .toList();
-    }
-
-    public Page<ServiceDto> getResults(String selectedKeyword, String postalCode, int page, int size) {
-        // Create the pageable object (sorted by company name by default)
-        Pageable pageable = PageRequest.of(page, size, Sort.by("companyName").ascending());
-
-        // Fetch the page of entities
-        Page<Services> servicesPage = _servicesRepository.findByUnifiedKeyword(selectedKeyword, postalCode, pageable);
-
-        // Map the Page of Entities to a Page of DTOs
-        return servicesPage.map(service -> serviceMapper.toDto(service));
-    }
+    
 
     public List<String> getImages(long serviceId) {
         try {
@@ -224,5 +185,7 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
 
         return new ArrayList<>(keywordSet);
     }
+
+    
 
 }
