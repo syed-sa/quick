@@ -20,6 +20,7 @@ import com.justsearch.backend.dto.RegisterBusinessDto;
 import com.justsearch.backend.dto.ServiceDto;
 import com.justsearch.backend.service.BusinessRegistry.BuisnessRegistry;
 import com.justsearch.backend.service.BusinessRegistry.BusinessCategoryService;
+import com.justsearch.backend.service.QuickServices.BookService;
 
 import org.springframework.data.domain.Page;
 
@@ -30,10 +31,12 @@ public class ServicesController {
 
     public BuisnessRegistry _registerServicesService;
     public BusinessCategoryService _categoryService;
+    public BookService _bookService;
 
-    public ServicesController(BuisnessRegistry registerServicesService, BusinessCategoryService categoryService) {
+    public ServicesController(BuisnessRegistry registerServicesService, BusinessCategoryService categoryService, BookService bookService) {
         this._registerServicesService = registerServicesService;
         this._categoryService = categoryService;
+        this._bookService = bookService;
     }
 
     @PostMapping(value = "/register", consumes = "multipart/form-data")
@@ -51,7 +54,7 @@ public class ServicesController {
         if (q == null || q.trim().length() < 3) {
             return ResponseEntity.ok(Collections.emptyList());
         }
-        return ResponseEntity.ok(_registerServicesService.getGlobalSuggestions(q));
+        return ResponseEntity.ok(_bookService.getGlobalSuggestions(q));
     }
 
     @GetMapping("/getByCategory")
@@ -61,7 +64,7 @@ public class ServicesController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<ServiceDto> services = _registerServicesService.getResults(keyWord, postalCode, page, size);
+            Page<ServiceDto> services = _bookService.getResults(keyWord, postalCode, page, size);
             services.getContent().forEach(service -> System.out.println("Company Name: " + service.getCompanyName()));
             return ResponseEntity.ok(services);
         } catch (IllegalArgumentException e) {
@@ -111,5 +114,19 @@ public class ServicesController {
             @RequestParam String q) {
         return _categoryService.getSuggestions(q);
     }
+
+    @GetMapping("/all")
+public ResponseEntity<?> getAllServices(
+        @RequestParam(required = false) String category   // nullable
+) {
+    try {
+        List<ServiceDto> services = _bookService.getAllServices(category);
+        return ResponseEntity.ok(services);
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body(e.getMessage());
+    }
 }
+
+}
+
 

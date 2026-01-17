@@ -43,4 +43,11 @@ public interface ServicesRepository extends JpaRepository<Services, Long> {
 
     // Find all services by service provider (user) ID
     List<Services> findAllByServiceProviderId(long serviceProviderId);
+
+    List<Services> findAll();
+
+   List<Services> findByBusinessCategory_Id(Long categoryId);
+
+
+
 }
