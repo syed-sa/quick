@@ -92,7 +92,6 @@ public class AuthServiceImpl implements AuthService {
             RefreshToken refreshToken = jwtUtils.generateRefreshToken(user.getId());
             _refreshTokenRepository.save(refreshToken);
 
-            // Determine the role
             String role = user.getRoles().stream()
                     .anyMatch(r -> r.getName().equalsIgnoreCase("ADMIN")) ? "ADMIN" : "USER";
 
@@ -134,7 +133,6 @@ public class AuthServiceImpl implements AuthService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // ✅ Mark old refresh token as USED (revoked)
         storedToken.setRevoked(true);
         _refreshTokenRepository.save(storedToken);
 

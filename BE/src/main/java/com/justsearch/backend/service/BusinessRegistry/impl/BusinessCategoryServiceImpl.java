@@ -27,4 +27,6 @@ public class BusinessCategoryServiceImpl implements BusinessCategoryService {
                 .map(c -> new CategorySuggestionDto(c.getId(), c.getName()))
                 .toList();
     }
+
+    
 }
