@@ -1,4 +1,5 @@
-package  com.justsearch.backend.model;
+package com.justsearch.backend.model;
+
 import java.util.Date;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,9 +17,11 @@ public class RefreshToken {
     private Long userId;
     private Date expiryDate;
     private boolean isRevoked;
-public RefreshToken() {
+
+    public RefreshToken() {
         // Default constructor for JPA
     }
+
     public RefreshToken(String token, Long userId, Date expiryDate) {
         this.token = token;
         this.userId = userId;
@@ -45,6 +48,7 @@ public RefreshToken() {
     public Date getExpiryDate() {
         return expiryDate;
     }
+
     public void setExpiryDate(Date expiryDate) {
         this.expiryDate = expiryDate;
     }
