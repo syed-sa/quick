@@ -13,4 +13,6 @@ public interface AuthService {
     ResponseEntity<TokenResponseDto> refresh(String refreshToken);
 
     void logout(String refreshToken);
+
+    void verifyEmail(String token);
 }

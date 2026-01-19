@@ -1,11 +1,13 @@
 package com.justsearch.backend.service.Authentication.impl;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +23,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.justsearch.backend.dto.SignInDto;
 import com.justsearch.backend.dto.SignupRequestDto;
 import com.justsearch.backend.dto.TokenResponseDto;
+import com.justsearch.backend.model.EmailVerificationToken;
 import com.justsearch.backend.model.RefreshToken;
 import com.justsearch.backend.model.Role;
 import com.justsearch.backend.model.User;
+import com.justsearch.backend.repository.EmailVerificationTokenRepository;
 import com.justsearch.backend.repository.RefreshTokenRepository;
 import com.justsearch.backend.repository.UserRepository;
 import com.justsearch.backend.security.JwtUtils;
 import com.justsearch.backend.service.Authentication.AuthService;
+import com.justsearch.backend.service.Notification.EmailService;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -39,41 +44,98 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
 
     private final JwtUtils jwtUtils;
+
     private RoleServiceImpl _roleService;
+
+    private final String frontendBaseUrl = "http://localhost:8080";
+
+    private final EmailService emailService;
+
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
+
     @Autowired
     private AuthenticationManager authenticationManager;
 
     public AuthServiceImpl(PasswordEncoder passwordEncoder, JwtUtils jwtUtils,
             RefreshTokenRepository refreshTokenRepository, RoleServiceImpl roleService,
-            AuthenticationManager authenticationManager) {
+            AuthenticationManager authenticationManager, EmailService emailService,
+            EmailVerificationTokenRepository emailVerificationTokenRepository) {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this._refreshTokenRepository = refreshTokenRepository;
         _roleService = roleService;
         this.authenticationManager = authenticationManager;
+        this.emailVerificationTokenRepository = emailVerificationTokenRepository;
+        this.emailService = emailService;
 
     }
 
     public void userSignUp(SignupRequestDto signUpRequest) {
+
         if (_userRepository.existsByEmail(signUpRequest.getEmail())) {
             throw new RuntimeException("Email already taken");
         }
 
+        // 1. Create user
         User user = new User();
         user.setEmail(signUpRequest.getEmail());
         user.setName(signUpRequest.getName());
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         user.setPhone(signUpRequest.getPhone());
+        user.setVerified(false);
+
+        // roles
         Set<Role> roleSet = new HashSet<>();
-        Role role = _roleService.findByName("USER");
-        roleSet.add(role);
-        if (user.getEmail().split("@")[1].equals("admin.edu")) {
-            Role adminRole = _roleService.findByName("ADMIN");
-            roleSet.add(adminRole);
+        roleSet.add(_roleService.findByName("USER"));
+
+        if (user.getEmail().endsWith("@admin.edu")) {
+            roleSet.add(_roleService.findByName("ADMIN"));
         }
         user.setRoles(roleSet);
 
         _userRepository.save(user);
+
+        // 2. Create verification token (separate model)
+        String token = UUID.randomUUID().toString();
+
+        EmailVerificationToken verificationToken = new EmailVerificationToken();
+        verificationToken.setToken(token);
+        verificationToken.setUser(user);
+        verificationToken.setExpiry(LocalDateTime.now().plusHours(24));
+
+        emailVerificationTokenRepository.save(verificationToken);
+
+        // 3. Send verification email (async)
+        String verificationLink = frontendBaseUrl + "/verify-email?token=" + token;
+
+        emailService.sendVerificationEmail(
+                user.getEmail(),
+                verificationLink);
+    }
+
+    @Transactional
+    @Override
+    public void verifyEmail(String token) {
+
+        EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid verification token"));
+
+        if (verificationToken.getExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Verification token expired");
+        }
+
+        User user = verificationToken.getUser();
+
+        if (user.isVerified()) {
+            return; // idempotent
+        }
+
+        // ✅ THIS IS WHERE VERIFIED BECOMES TRUE
+        user.setVerified(true);
+        _userRepository.save(user);
+
+        // cleanup
+        emailVerificationTokenRepository.delete(verificationToken);
     }
 
     public ResponseEntity<?> userSignIn(SignInDto request) {
