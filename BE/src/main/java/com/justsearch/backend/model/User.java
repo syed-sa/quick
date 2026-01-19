@@ -1,4 +1,6 @@
 package com.justsearch.backend.model;
+
+import java.time.LocalDateTime;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -30,6 +32,10 @@ public class User {
 
     private String password;
 
+    private boolean isVerified;
+
+
+
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinTable(name = "USER_ROLES", joinColumns = {
             @JoinColumn(name = "USER_ID")
@@ -40,6 +46,7 @@ public class User {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -83,4 +90,11 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
-}
+    public boolean isVerified() {
+        return isVerified;
+    }
+    public void setVerified(boolean isVerified) {
+        this.isVerified = isVerified;
+    }
+ 
+}   
