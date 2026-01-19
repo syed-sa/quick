@@ -3,6 +3,7 @@ package com.justsearch.backend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.justsearch.backend.dto.SignInDto;
 import com.justsearch.backend.dto.SignupRequestDto; 
@@ -36,6 +37,12 @@ public class AuthController {
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         }
+    }
+
+     @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        _authService.verifyEmail(token);
+        return ResponseEntity.ok(Map.of("message", "Email verified successfully"));
     }
 
     @PostMapping("/signin")
