@@ -1,4 +1,5 @@
 package com.justsearch.backend.config;
+import java.security.SecureRandom;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,7 +57,8 @@ public class SecurityConfig {
                                 "/api/user/logout",
                                 "/api/user/refresh",
                                 "/api/user/signin",
-                                "/api/user/signup")
+                                "/api/user/signup",
+                                "/api/user/verify-email")
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -76,5 +78,10 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecureRandom secureRandom() {
+        return new SecureRandom();
     }
 }
