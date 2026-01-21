@@ -1,4 +1,5 @@
 package com.justsearch.backend.config;
+
 import java.security.SecureRandom;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -49,16 +50,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/ws-notify/**",
-                                "/images/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/webjars/**",
-                                "/api/user/logout",
-                                "/api/user/refresh",
-                                "/api/user/signin",
-                                "/api/user/signup",
-                                "/api/user/verify-email")
+                                PUBLIC_URLS)
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -84,4 +76,20 @@ public class SecurityConfig {
     public SecureRandom secureRandom() {
         return new SecureRandom();
     }
+
+    private static final String[] PUBLIC_URLS = {
+            "/ws-notify/**",
+            "/images/**",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/api/user/signin",
+            "/api/user/signup",
+            "/api/user/verify-email",
+            "/api/user/forgot-password",
+            "/api/user/reset-password",
+            "/api/user/refresh"
+    };
+
 }
