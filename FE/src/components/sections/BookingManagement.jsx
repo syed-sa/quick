@@ -1,24 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Phone, 
-  Mail, 
-  Check, 
-  X, 
-  Eye, 
-  Filter,
-  Search,
-  ChevronDown,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Store,
-  UserCheck,
-  Building,
-  MapPin
-} from 'lucide-react';
+
+import { Calendar, Clock, User, Phone, Mail, Check, X, 
+  Eye, Filter,Search,ChevronDown,AlertCircle,CheckCircle,
+  XCircle,Store,UserCheck,Building,MapPin} from 'lucide-react';
 import api from '../auth/axios';
 
 const UnifiedBookingManagement = () => {
