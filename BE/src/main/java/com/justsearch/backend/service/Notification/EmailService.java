@@ -3,5 +3,5 @@ public interface EmailService {
 
     void sendVerificationEmail(String to, String verificationLink);
 
-    void sendOtpEmail(String to, String otp);
+    void sendPasswordResetEmail(String to, String resetLink);
 }

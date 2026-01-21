@@ -10,4 +10,7 @@ public interface EmailVerificationTokenRepository
         extends JpaRepository<EmailVerificationToken, Long> {
 
     Optional<EmailVerificationToken> findByToken(String token);
+
+    void deleteByUser(com.justsearch.backend.model.User user);
+
 }

@@ -1,4 +1,5 @@
 package com.justsearch.backend.service.Notification.Impl;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -22,8 +23,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVerificationEmail(String to, String verificationLink) {
         String subject = "Verify your email";
-        String body =
-                "Welcome!\n\n" +
+        String body = "Welcome!\n\n" +
                 "Click the link below to verify your email:\n" +
                 verificationLink + "\n\n" +
                 "This link expires in 24 hours.";
@@ -32,15 +32,19 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Async
-    @Override
-    public void sendOtpEmail(String to, String otp) {
-        String subject = "Your OTP Code";
-        String body =
-                "Your OTP is: " + otp + "\n\n" +
-                "Valid for 10 minutes. Do not share it.";
+    public void sendPasswordResetEmail(String to, String resetLink) {
+
+        String subject = "Reset your password";
+        String body = "You requested a password reset.\n\n" +
+                "Click the link below to reset your password:\n" +
+                resetLink + "\n\n" +
+                "This link expires in 15 minutes.\n" +
+                "If you didn't request this, ignore this email.";
 
         sendMail(to, subject, body);
     }
+
+    
 
     private void sendMail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -51,4 +55,6 @@ public class EmailServiceImpl implements EmailService {
 
         mailSender.send(message);
     }
+
+
 }
