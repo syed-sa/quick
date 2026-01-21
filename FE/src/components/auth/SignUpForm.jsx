@@ -27,25 +27,24 @@ const SignUpForm = () => {
   });
 
   const onSubmit = async (data) => {
-    try {
-      const response = await fetch("http://localhost:8080/api/user/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  try {
+    const response = await fetch("http://localhost:8080/api/user/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
 
-      const resData = await response.json();
+    const resData = await response.json();
 
-      if (!response.ok) throw new Error(resData.message || "Something went wrong");
+    if (!response.ok) throw new Error(resData.message || "Something went wrong");
 
-      alert("Account created successfully! Please login.");
+    alert("Account created! Please verify your email before login.");
+    navigate("/check-email");
 
-      navigate("/");
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
+  } catch (err) {
+    alert(err.message);
+  }
+};
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>

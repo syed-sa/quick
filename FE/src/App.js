@@ -17,6 +17,7 @@
   import NotificationPage from "./pages/Notification";
   import AdminDashboard from "./pages/Admin";
   import { useNotificationSocket } from "./hooks/useNotificationSocket";
+  import VerifyEmail from "./components/auth/VerifyEmail"
 
   function App() {
     const [selectedCity, setSelectedCity] = useState("Chennai");
@@ -47,6 +48,7 @@
         <Route path="/booking-management" element={<PrivateRoute><BookingManagement /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><NotificationPage /></PrivateRoute>} />
         <Route path="/admin" element = { <PrivateRoute><AdminDashboard/></PrivateRoute>} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route
           path="/register-service"
