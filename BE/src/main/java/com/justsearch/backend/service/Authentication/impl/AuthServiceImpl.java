@@ -33,7 +33,7 @@ import com.justsearch.backend.repository.UserRepository;
 import com.justsearch.backend.security.JwtUtils;
 import com.justsearch.backend.service.Authentication.AuthService;
 import com.justsearch.backend.service.Notification.EmailService;
-
+//test123
 @Service
 public class AuthServiceImpl implements AuthService {
     @Autowired
@@ -47,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
 
     private RoleServiceImpl _roleService;
 
-    private final String frontendBaseUrl = "http://localhost:8080";
+    private final String frontendBaseUrl = "http://localhost:3000";
 
     private final EmailService emailService;
 
@@ -174,6 +174,58 @@ public class AuthServiceImpl implements AuthService {
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(errorResponse);
         }
+
+    }
+
+    @Transactional
+    public void forgotPassword(String email) {
+
+        Optional<User> userOpt = _userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return; // do NOT reveal user existence
+        }
+
+        User user = userOpt.get();
+
+        // delete old tokens
+        emailVerificationTokenRepository.deleteByUser(user);
+        emailVerificationTokenRepository.flush();
+
+        String token = UUID.randomUUID().toString();
+
+        EmailVerificationToken resetToken = new EmailVerificationToken();
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiry(LocalDateTime.now().plusMinutes(30));
+
+        emailVerificationTokenRepository.save(resetToken);
+
+        String resetLink = frontendBaseUrl + "/reset-password?token=" + token;
+
+        emailService.sendPasswordResetEmail(
+                user.getEmail(),
+                resetLink);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+
+        EmailVerificationToken resetToken = emailVerificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+
+        if (resetToken.getExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Reset token expired");
+        }
+
+        User user = resetToken.getUser();
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        _userRepository.save(user);
+
+        // invalidate sessions
+        _refreshTokenRepository.deleteAllByUserId(user.getId());
+
+        emailVerificationTokenRepository.delete(resetToken);
     }
 
     @Transactional
