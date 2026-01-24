@@ -46,8 +46,6 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> signIn(@RequestBody SignInDto signInCredentials) {
-        System.out.println("Password: " + signInCredentials.getPassword());
-        System.out.println("UserInput: " + signInCredentials.getEmail());
         return _authService.userSignIn(signInCredentials);
     }
 
