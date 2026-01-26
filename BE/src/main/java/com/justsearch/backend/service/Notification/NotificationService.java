@@ -10,8 +10,8 @@ public interface NotificationService {
 
     public void markNotificationAsRead(Long notificationId);
 
-    public void createNotification(BookingDetails bookingDetails);
+    public void createNotificationAsync(BookingDetails bookingDetails);
 
-    public void createBookingRejectedNotification(BookingDetails bookingDetails);
+    public void createBookingRejectedNotificationAsync(BookingDetails bookingDetails);
 
 }
