@@ -4,12 +4,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.justsearch.backend.constants.AppConstants;
 import com.justsearch.backend.dto.BookingDetailsDto;
 import com.justsearch.backend.dto.ServiceDto;
@@ -26,140 +29,169 @@ import com.justsearch.backend.repository.UserRepository;
 import com.justsearch.backend.service.Notification.NotificationService;
 import com.justsearch.backend.service.QuickServices.BookService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 @Service
+@Transactional
 public class BookServiceImpl implements BookService {
 
-    private BookingDetailsRepository _bookingDetailsRepository;
-    private ServicesRepository _servicesRepository;
-    private UserRepository _userRepository;
-    private NotificationService _notificationService;
-    private BookingDetailsMapper _bookingDetailsMapper;
-    private final ServiceMapper _serviceMapper;
-    private CategoryRepository _categoryRepository;
+    private static final Logger log = LoggerFactory.getLogger(BookServiceImpl.class);
 
-    public BookServiceImpl(BookingDetailsRepository bookingDetailsRepository, ServicesRepository servicesRepository,
-            UserRepository userRepository, NotificationService notificationService,
-            BookingDetailsMapper bookingDetailsMapper, ServiceMapper serviceMapper,
+    private final BookingDetailsRepository bookingDetailsRepository;
+    private final ServicesRepository servicesRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final BookingDetailsMapper bookingDetailsMapper;
+    private final ServiceMapper serviceMapper;
+    private final CategoryRepository categoryRepository;
+
+    public BookServiceImpl(
+            BookingDetailsRepository bookingDetailsRepository,
+            ServicesRepository servicesRepository,
+            UserRepository userRepository,
+            NotificationService notificationService,
+            BookingDetailsMapper bookingDetailsMapper,
+            ServiceMapper serviceMapper,
             CategoryRepository categoryRepository) {
-        _bookingDetailsRepository = bookingDetailsRepository;
-        _servicesRepository = servicesRepository;
-        _userRepository = userRepository;
-        _notificationService = notificationService;
-        _bookingDetailsMapper = bookingDetailsMapper;
-        _serviceMapper = serviceMapper;
-        _categoryRepository = categoryRepository;
+
+        this.bookingDetailsRepository = bookingDetailsRepository;
+        this.servicesRepository = servicesRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
+        this.bookingDetailsMapper = bookingDetailsMapper;
+        this.serviceMapper = serviceMapper;
+        this.categoryRepository = categoryRepository;
     }
     /// Get global keyword suggestions from both categories and services
     /// @param query The input query string for suggestions
     /// @return A list of up to 10 unique keyword suggestions
 
+     @Transactional(readOnly = true)
     public List<String> getGlobalSuggestions(String query) {
 
         String cleanQuery = query.trim().toLowerCase();
 
-        // 2. Fetch from both sources with a strict limit (Top 10 from each)
-        // We use Limit.of(10) to prevent deep database scanning
-        List<String> catKeywords = _categoryRepository.findKeywordSuggestions(
-                cleanQuery,
-                PageRequest.of(0, 10));
+        CompletableFuture<List<String>> categoriesFuture =
+                CompletableFuture.supplyAsync(() ->
+                        categoryRepository.findKeywordSuggestions(cleanQuery, PageRequest.of(0, 10)));
 
-        List<String> serviceKeywords = _servicesRepository.findKeywordSuggestions(
-                cleanQuery,
-                PageRequest.of(0, 10));
+        CompletableFuture<List<String>> servicesFuture =
+                CompletableFuture.supplyAsync(() ->
+                        servicesRepository.findKeywordSuggestions(cleanQuery, PageRequest.of(0, 10)));
 
-        // 3. Merge into a Set to remove duplicates
-        // TreeSet with CASE_INSENSITIVE_ORDER keeps them alphabetical
-        Set<String> combinedResults = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-
-        combinedResults.addAll(catKeywords);
-        combinedResults.addAll(serviceKeywords);
-
-        return combinedResults.stream()
-                .limit(10)
-                .toList();
+        return categoriesFuture.thenCombine(servicesFuture, (cats, services) -> {
+            Set<String> combined = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            combined.addAll(cats);
+            combined.addAll(services);
+            return combined.stream().limit(10).toList();
+        }).join();
     }
 
-    public Page<ServiceDto> getResults(String selectedKeyword, String postalCode, int page, int size) {
-        // Create the pageable object (sorted by company name by default)
+    // -------------------- SEARCH RESULTS --------------------
+
+    @Transactional(readOnly = true)
+    public Page<ServiceDto> getResults(String keyword, String postalCode, int page, int size) {
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("companyName").ascending());
 
-        // Fetch the page of entities
-        Page<Services> servicesPage = _servicesRepository.findByUnifiedKeyword(selectedKeyword, postalCode, pageable);
-
-        // Map the Page of Entities to a Page of DTOs
-        return servicesPage.map(service -> _serviceMapper.toDto(service));
+        return servicesRepository
+                .findByUnifiedKeyword(keyword, postalCode, pageable)
+                .map(serviceMapper::toDto);
     }
 
-    public void createBookingRequest(BookingDetailsDto bookserviceDto) {
-        if (bookserviceDto == null) {
-            throw new IllegalArgumentException("service must not be null");
+   // -------------------- CREATE BOOKING --------------------
+
+    public void createBookingRequest(BookingDetailsDto dto) {
+
+        if (dto == null) {
+            throw new IllegalArgumentException("Booking details must not be null");
         }
 
-        User customer = _userRepository.findById(bookserviceDto.getCustomerId())
+        User customer = userRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid customer ID"));
 
-        Services service = _servicesRepository.findById(bookserviceDto.getServiceId())
+        Services service = servicesRepository.findById(dto.getServiceId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid service ID"));
 
-        BookingDetails bookingDetails = new BookingDetails();
-        bookingDetails.setCustomer(customer);
-        bookingDetails.setService(service);
-        bookingDetails.setBookingStatus(AppConstants.BOOKING_STATUS_PENDING);
-        bookingDetails.setDescription(bookserviceDto.getDescription());
-        bookingDetails.setCreatedAt(LocalDateTime.now());
-        bookingDetails.setLocation(bookserviceDto.getLocation());
-        bookingDetails.setActive(true);
-        _bookingDetailsRepository.save(bookingDetails);
-        _notificationService.createNotification(bookingDetails);
-        System.out.println("Booking request created successfully for service: " +
-                bookingDetails.getService().getCompanyName() + " with ID: " + bookingDetails.getId());
+        BookingDetails booking = new BookingDetails();
+        booking.setCustomer(customer);
+        booking.setService(service);
+        booking.setBookingStatus(AppConstants.BOOKING_STATUS_PENDING);
+        booking.setDescription(dto.getDescription());
+        booking.setLocation(dto.getLocation());
+        booking.setCreatedAt(LocalDateTime.now());
+        booking.setActive(true);
+
+        bookingDetailsRepository.save(booking);
+
+        //  async side effect
+        notificationService.createNotificationAsync(booking);
+
+        log.info("Booking created: bookingId={}, service={}",
+                booking.getId(), service.getCompanyName());
     }
 
+     // -------------------- FETCH BOOKINGS --------------------
+
+    @Transactional(readOnly = true)
     public List<BookingDetailsDto> getBookingRequests(long serviceProviderId) {
-        var bookService = _bookingDetailsRepository.fetchBookingsWithCustomerInfo(serviceProviderId);
-        return _bookingDetailsMapper.toDtoList(bookService);
+        return bookingDetailsMapper.toDtoList(
+                bookingDetailsRepository.fetchBookingsWithCustomerInfo(serviceProviderId)
+        );
     }
 
+    @Transactional(readOnly = true)
     public List<BookingDetailsDto> getMyBookings(long userId) {
-        List<BookingDetails> bookService = _bookingDetailsRepository.fetchBookingsWithServiceProviderInfo(userId);
-        return _bookingDetailsMapper.toDtoList(bookService);
+        return bookingDetailsMapper.toDtoList(
+                bookingDetailsRepository.fetchBookingsWithServiceProviderInfo(userId)
+        );
     }
+
+
+    // -------------------- UPDATE BOOKING --------------------
 
     public void updateBooking(long bookingId, String status) {
-        BookingDetails bookingDetails = _bookingDetailsRepository.findById(bookingId)
+
+        BookingDetails booking = bookingDetailsRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid booking ID"));
-        bookingDetails.setBookingStatus(status);
-        if (status.equals(AppConstants.BOOKING_STATUS_CANCELLED)
-                || status.equals(AppConstants.BOOKING_STATUS_REJECTED)) {
-            _notificationService.createBookingRejectedNotification(bookingDetails);
-            bookingDetails.setActive(false);
+
+        booking.setBookingStatus(status);
+
+        if (AppConstants.BOOKING_STATUS_CANCELLED.equals(status)
+                || AppConstants.BOOKING_STATUS_REJECTED.equals(status)) {
+
+            booking.setActive(false);
+            notificationService.createBookingRejectedNotificationAsync(booking);
         }
-        _bookingDetailsRepository.save(bookingDetails);
+
+        bookingDetailsRepository.save(booking);
     }
 
     public List<BookingDetailsDto> getRecentBookings() {
-        List<BookingDetails> recentBookings = _bookingDetailsRepository.findTop10ByOrderByCreatedAtDesc();
-        return _bookingDetailsMapper.toDtoList(recentBookings);
+        List<BookingDetails> recentBookings = bookingDetailsRepository.findTop10ByOrderByCreatedAtDesc();
+        return bookingDetailsMapper.toDtoList(recentBookings);
     }
 
-    public List<ServiceDto> getAllServices(String category) {
+     public List<ServiceDto> getAllServices(String category) {
 
         // If category is absent or empty → return all
         if (category == null || category.trim().isEmpty()) {
-            return _servicesRepository.findAll()
+            return servicesRepository.findAll()
                     .stream()
-                    .map(_serviceMapper::toDto)
+                    .map(serviceMapper::toDto)
                     .toList();
         }
 
         // Otherwise, return filtered list
-        BuisnessCategory categoryEntity = _categoryRepository.findByExactKeyword(category)
+        BuisnessCategory categoryEntity = categoryRepository.findByExactKeyword(category)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid category: " + category));
 
-        return _servicesRepository.findAll()
+        return servicesRepository.findAll()
                 .stream()
                 .filter(service -> service.getBusinessCategory().getId() == categoryEntity.getId())
-                .map(_serviceMapper::toDto)
+                .map(serviceMapper::toDto)
                 .toList();
     }
 
