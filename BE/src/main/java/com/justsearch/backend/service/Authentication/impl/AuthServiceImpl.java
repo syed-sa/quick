@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+
 import com.justsearch.backend.dto.SignInDto;
 import com.justsearch.backend.dto.SignupRequestDto;
 import com.justsearch.backend.dto.TokenResponseDto;
@@ -32,22 +35,24 @@ import com.justsearch.backend.repository.RefreshTokenRepository;
 import com.justsearch.backend.repository.UserRepository;
 import com.justsearch.backend.security.JwtUtils;
 import com.justsearch.backend.service.Authentication.AuthService;
+import com.justsearch.backend.service.Authentication.RoleService;
 import com.justsearch.backend.service.Notification.EmailService;
+
 //test123
 @Service
 public class AuthServiceImpl implements AuthService {
-    @Autowired
-    private UserRepository _userRepository;
 
+    private final UserRepository userRepository;
     private RefreshTokenRepository _refreshTokenRepository;
 
     private final PasswordEncoder passwordEncoder;
 
     private final JwtUtils jwtUtils;
 
-    private RoleServiceImpl _roleService;
+    private RoleService roleService;
 
-    private final String frontendBaseUrl = "http://localhost:3000";
+    @Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
 
     private final EmailService emailService;
 
@@ -56,23 +61,27 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public AuthServiceImpl(PasswordEncoder passwordEncoder, JwtUtils jwtUtils,
-            RefreshTokenRepository refreshTokenRepository, RoleServiceImpl roleService,
-            AuthenticationManager authenticationManager, EmailService emailService,
-            EmailVerificationTokenRepository emailVerificationTokenRepository) {
+    public AuthServiceImpl(PasswordEncoder passwordEncoder,
+            JwtUtils jwtUtils,
+            RefreshTokenRepository refreshTokenRepository,
+            RoleService roleService,
+            AuthenticationManager authenticationManager,
+            EmailService emailService,
+            EmailVerificationTokenRepository emailVerificationTokenRepository, UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
         this._refreshTokenRepository = refreshTokenRepository;
-        _roleService = roleService;
+        this.roleService = roleService;
         this.authenticationManager = authenticationManager;
         this.emailVerificationTokenRepository = emailVerificationTokenRepository;
         this.emailService = emailService;
+        this.userRepository = userRepository;
 
     }
 
     public void userSignUp(SignupRequestDto signUpRequest) {
 
-        if (_userRepository.existsByEmail(signUpRequest.getEmail())) {
+        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             throw new RuntimeException("Email already taken");
         }
 
@@ -86,14 +95,14 @@ public class AuthServiceImpl implements AuthService {
 
         // roles
         Set<Role> roleSet = new HashSet<>();
-        roleSet.add(_roleService.findByName("USER"));
+        roleSet.add(roleService.findByName("USER"));
 
         if (user.getEmail().endsWith("@admin.edu")) {
-            roleSet.add(_roleService.findByName("ADMIN"));
+            roleSet.add(roleService.findByName("ADMIN"));
         }
         user.setRoles(roleSet);
 
-        _userRepository.save(user);
+        userRepository.save(user);
 
         // 2. Create verification token (separate model)
         String token = UUID.randomUUID().toString();
@@ -132,14 +141,14 @@ public class AuthServiceImpl implements AuthService {
 
         // ✅ THIS IS WHERE VERIFIED BECOMES TRUE
         user.setVerified(true);
-        _userRepository.save(user);
+        userRepository.save(user);
 
         // cleanup
         emailVerificationTokenRepository.delete(verificationToken);
     }
 
     public ResponseEntity<?> userSignIn(SignInDto request) {
-        Optional<User> userOptional = _userRepository.findByEmail(request.getEmail());
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
         if (userOptional.isEmpty()) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("message", "User not found");
@@ -149,6 +158,15 @@ public class AuthServiceImpl implements AuthService {
                     .body(errorResponse);
         }
         User user = userOptional.get();
+        if (!user.isVerified()) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Email not verified");
+            errorResponse.put("error", "EMAIL_NOT_VERIFIED");
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(errorResponse);
+        }
+
         try {
             final String token = getAccessToken(user, request.getPassword());
             RefreshToken refreshToken = jwtUtils.generateRefreshToken(user.getId());
@@ -180,7 +198,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void forgotPassword(String email) {
 
-        Optional<User> userOpt = _userRepository.findByEmail(email);
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             return; // do NOT reveal user existence
         }
@@ -220,7 +238,7 @@ public class AuthServiceImpl implements AuthService {
         User user = resetToken.getUser();
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        _userRepository.save(user);
+        userRepository.save(user);
 
         // invalidate sessions
         _refreshTokenRepository.deleteAllByUserId(user.getId());
@@ -251,7 +269,7 @@ public class AuthServiceImpl implements AuthService {
         _refreshTokenRepository.save(storedToken);
 
         // Load user
-        User user = _userRepository.findById(storedToken.getUserId())
+        User user = userRepository.findById(storedToken.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Build authentication

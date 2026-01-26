@@ -22,9 +22,10 @@ public interface CategoryRepository extends JpaRepository<BuisnessCategory, Long
                         Pageable pageable);
 
         @Query("""
-                           SELECT c FROM BuisnessCategory c
-                           WHERE LOWER(:selectedKeyword) MEMBER OF
-                                 (SELECT LOWER(k) FROM c.keywords k)
+                            SELECT c
+                            FROM BuisnessCategory c
+                            JOIN c.keywords k
+                            WHERE LOWER(k) = LOWER(:selectedKeyword)
                         """)
         Optional<BuisnessCategory> findByExactKeyword(@Param("selectedKeyword") String selectedKeyword);
 
