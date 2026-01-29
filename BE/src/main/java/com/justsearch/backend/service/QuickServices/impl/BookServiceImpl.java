@@ -32,7 +32,6 @@ import com.justsearch.backend.service.QuickServices.BookService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @Service
 @Transactional
 public class BookServiceImpl implements BookService {
@@ -68,25 +67,26 @@ public class BookServiceImpl implements BookService {
     /// @param query The input query string for suggestions
     /// @return A list of up to 10 unique keyword suggestions
 
-     @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<String> getGlobalSuggestions(String query) {
+        log.debug("Fetching global suggestions for query={}", query);
 
         String cleanQuery = query.trim().toLowerCase();
 
-        CompletableFuture<List<String>> categoriesFuture =
-                CompletableFuture.supplyAsync(() ->
-                        categoryRepository.findKeywordSuggestions(cleanQuery, PageRequest.of(0, 10)));
+        CompletableFuture<List<String>> categoriesFuture = CompletableFuture
+                .supplyAsync(() -> categoryRepository.findKeywordSuggestions(cleanQuery, PageRequest.of(0, 10)));
 
-        CompletableFuture<List<String>> servicesFuture =
-                CompletableFuture.supplyAsync(() ->
-                        servicesRepository.findKeywordSuggestions(cleanQuery, PageRequest.of(0, 10)));
+        CompletableFuture<List<String>> servicesFuture = CompletableFuture
+                .supplyAsync(() -> servicesRepository.findKeywordSuggestions(cleanQuery, PageRequest.of(0, 10)));
 
-        return categoriesFuture.thenCombine(servicesFuture, (cats, services) -> {
+        List<String> result = categoriesFuture.thenCombine(servicesFuture, (cats, services) -> {
             Set<String> combined = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             combined.addAll(cats);
             combined.addAll(services);
             return combined.stream().limit(10).toList();
         }).join();
+        log.debug("Suggestions count={}", result.size());
+        return result;
     }
 
     // -------------------- SEARCH RESULTS --------------------
@@ -94,21 +94,29 @@ public class BookServiceImpl implements BookService {
     @Transactional(readOnly = true)
     public Page<ServiceDto> getResults(String keyword, String postalCode, int page, int size) {
 
+        log.info("Service search initiated keyword={}, postalCode={}, page={}, size={}",
+                keyword, postalCode, page, size);
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("companyName").ascending());
 
-        return servicesRepository
+        Page<ServiceDto> result = servicesRepository
                 .findByUnifiedKeyword(keyword, postalCode, pageable)
                 .map(serviceMapper::toDto);
+
+        log.info("Search completed resultsCount={}", result.getTotalElements());
+        return result;
     }
 
-   // -------------------- CREATE BOOKING --------------------
+    // -------------------- CREATE BOOKING --------------------
 
     public void createBookingRequest(BookingDetailsDto dto) {
 
         if (dto == null) {
+            log.warn("Booking request failed: dto is null");
             throw new IllegalArgumentException("Booking details must not be null");
         }
-
+        log.info("Creating booking request customerId={}, serviceId={}",
+                dto.getCustomerId(), dto.getServiceId());
         User customer = userRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid customer ID"));
 
@@ -118,6 +126,7 @@ public class BookServiceImpl implements BookService {
         BookingDetails booking = new BookingDetails();
         booking.setCustomer(customer);
         booking.setService(service);
+        
         booking.setBookingStatus(AppConstants.BOOKING_STATUS_PENDING);
         booking.setDescription(dto.getDescription());
         booking.setLocation(dto.getLocation());
@@ -126,33 +135,33 @@ public class BookServiceImpl implements BookService {
 
         bookingDetailsRepository.save(booking);
 
-        //  async side effect
+        // async side effect
         notificationService.createNotificationAsync(booking);
 
         log.info("Booking created: bookingId={}, service={}",
                 booking.getId(), service.getCompanyName());
     }
 
-     // -------------------- FETCH BOOKINGS --------------------
+    // -------------------- FETCH BOOKINGS --------------------
 
     @Transactional(readOnly = true)
     public List<BookingDetailsDto> getBookingRequests(long serviceProviderId) {
         return bookingDetailsMapper.toDtoList(
-                bookingDetailsRepository.fetchBookingsWithCustomerInfo(serviceProviderId)
-        );
+                bookingDetailsRepository.fetchBookingsWithCustomerInfo(serviceProviderId));
     }
 
     @Transactional(readOnly = true)
     public List<BookingDetailsDto> getMyBookings(long userId) {
-        return bookingDetailsMapper.toDtoList(
-                bookingDetailsRepository.fetchBookingsWithServiceProviderInfo(userId)
-        );
-    }
+        log.debug("Fetching bookings for userId={}", userId);
 
+        return bookingDetailsMapper.toDtoList(
+                bookingDetailsRepository.fetchBookingsWithServiceProviderInfo(userId));
+    }
 
     // -------------------- UPDATE BOOKING --------------------
 
     public void updateBooking(long bookingId, String status) {
+    log.info("Updating booking bookingId={}, newStatus={}", bookingId, status);
 
         BookingDetails booking = bookingDetailsRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid booking ID"));
@@ -164,6 +173,8 @@ public class BookServiceImpl implements BookService {
 
             booking.setActive(false);
             notificationService.createBookingRejectedNotificationAsync(booking);
+                log.info("Booking deactivated bookingId={}", bookingId);
+
         }
 
         bookingDetailsRepository.save(booking);
@@ -174,23 +185,24 @@ public class BookServiceImpl implements BookService {
         return bookingDetailsMapper.toDtoList(recentBookings);
     }
 
-     public List<ServiceDto> getAllServices(String category) {
-
-        // If category is absent or empty → return all
+    public List<ServiceDto> getAllServices(String category) {
         if (category == null || category.trim().isEmpty()) {
+                   log.debug("Fetching all services (no category filter)");
+
             return servicesRepository.findAll()
                     .stream()
                     .map(serviceMapper::toDto)
                     .toList();
         }
+    log.info("Fetching services for category={}", category);
 
-        // Otherwise, return filtered list
         BuisnessCategory categoryEntity = categoryRepository.findByExactKeyword(category)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid category: " + category));
+                .orElseThrow(() -> {                log.warn("Invalid category filter={}", category);
+return new IllegalArgumentException("Invalid category: " + category);
+    });
 
-        return servicesRepository.findAll()
+        return servicesRepository.findByBusinessCategory_Id(categoryEntity.getId())
                 .stream()
-                .filter(service -> service.getBusinessCategory().getId() == categoryEntity.getId())
                 .map(serviceMapper::toDto)
                 .toList();
     }
