@@ -1,6 +1,7 @@
 package com.justsearch.backend.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

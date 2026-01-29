@@ -1,4 +1,5 @@
 package com.justsearch.backend.security;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import com.justsearch.backend.model.User;
 import com.justsearch.backend.repository.UserRepository;
+
 @Component
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -20,14 +22,15 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-        
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return new UserPrincipal(
+                user.getId(), // ✅ NON-PII
+                user.getEmail(), // used only for auth
                 user.getPassword(),
-                getAuthorities(user)
-        );
+                getAuthorities(user));
     }
 
     private Set<SimpleGrantedAuthority> getAuthorities(User user) {
