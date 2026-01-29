@@ -25,7 +25,8 @@ import com.justsearch.backend.service.Notification.NotificationService;
 @Transactional
 public class NotificationServiceImpl implements NotificationService {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificationServiceImpl.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(NotificationServiceImpl.class);
 
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
@@ -51,19 +52,33 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(readOnly = true)
     @Override
     public List<NotificationDto> getNotificationsForUser(Long userId) {
-        List<Notification> notifications = notificationRepository.findAllByUserId(userId);
+
+        log.debug("Fetching notifications for userId={}", userId);
+
+        List<Notification> notifications =
+                notificationRepository.findAllByUserId(userId);
+
+        log.debug("Notifications fetched count={} userId={}",
+                notifications.size(), userId);
+
         return notificationMapper.toDtoList(notifications);
     }
 
     @Override
     public void markNotificationAsRead(Long notificationId) {
+
+        log.info("Mark notification as read notificationId={}", notificationId);
+
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
+                .orElseThrow(() -> {
+                    log.warn("Notification not found notificationId={}", notificationId);
+                    return new IllegalArgumentException("Notification not found");
+                });
 
         notification.setRead(true);
         notificationRepository.save(notification);
 
-        log.info("Notification {} marked as read", notificationId);
+        log.info("Notification marked as read notificationId={}", notificationId);
     }
 
     // ---------------------------------------------------------
@@ -76,8 +91,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Async
     @Override
     public void createNotificationAsync(BookingDetails bookingDetails) {
+
+        log.info("Creating provider notification bookingId={}",
+                bookingDetails.getId());
+
         Notification notification = buildProviderNotification(bookingDetails);
         notificationRepository.save(notification);
+
+        log.info("Provider notification saved notificationId={} userId={}",
+                notification.getId(), notification.getUserId());
+
         pushToastAsync(notification);
     }
 
@@ -87,8 +110,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Async
     @Override
     public void createBookingRejectedNotificationAsync(BookingDetails bookingDetails) {
+
+        log.info("Creating customer notification bookingId={} status={}",
+                bookingDetails.getId(), bookingDetails.getBookingStatus());
+
         Notification notification = buildCustomerNotification(bookingDetails);
         notificationRepository.save(notification);
+
+        log.info("Customer notification saved notificationId={} userId={}",
+                notification.getId(), notification.getUserId());
+
         pushToastAsync(notification);
     }
 
@@ -97,41 +128,48 @@ public class NotificationServiceImpl implements NotificationService {
     // ---------------------------------------------------------
 
     private Notification buildProviderNotification(BookingDetails booking) {
+
         Notification n = new Notification();
         n.setUserId(booking.getService().getServiceProvider().getId());
-        n.setMessage("New booking request from customer: " +
-                booking.getCustomer().getId());
+        n.setMessage("New booking request from customer: " + booking.getCustomer().getId());
         n.setNotificationTitle(AppConstants.NEW_BOOKING_REQUEST);
         n.setNotificationType(AppConstants.BOOKING_STATUS_PENDING);
         n.setBookingId(booking.getId());
         n.setTimestamp(LocalDateTime.now());
         n.setRead(false);
+
         return n;
     }
 
     private Notification buildCustomerNotification(BookingDetails booking) {
+
         Notification n = new Notification();
         n.setUserId(booking.getCustomer().getId());
         n.setMessage(
-                "Your booking request for service: " +
-                        booking.getService().getCompanyName() +
-                        " has been " + booking.getBookingStatus());
+                "Your booking request for service has been " +
+                        booking.getBookingStatus());
         n.setNotificationTitle(AppConstants.BOOKING_STATUS_REJECTED);
         n.setNotificationType(AppConstants.BOOKING_STATUS_REJECTED);
         n.setBookingId(booking.getId());
         n.setTimestamp(LocalDateTime.now());
         n.setRead(false);
+
         return n;
     }
 
     @Async
     protected void pushToastAsync(Notification notification) {
+
         try {
+            log.debug("Sending toast notification notificationId={} userId={}",
+                    notification.getId(), notification.getUserId());
+
             User user = userRepository.findById(notification.getUserId())
                     .orElse(null);
 
-            if (user == null || user.getEmail() == null) {
-                log.warn("User not found for notification {}", notification.getId());
+            if (user == null) {
+                log.warn("User not found for notification notificationId={}",
+                        notification.getId());
                 return;
             }
 
@@ -142,15 +180,15 @@ public class NotificationServiceImpl implements NotificationService {
                     notification.getTimestamp());
 
             messagingTemplate.convertAndSendToUser(
-                    user.getEmail(),
+                    user.getEmail(),   // routing only, not logged
                     "/queue/toast",
                     toast);
 
-            log.info("Toast sent to user {} for notification {}",
-                    user.getEmail(), notification.getId());
+            log.info("Toast sent notificationId={} userId={}",
+                    notification.getId(), notification.getUserId());
 
         } catch (Exception e) {
-            log.error("Failed to send toast for notification {}",
+            log.error("Toast delivery failed notificationId={}",
                     notification.getId(), e);
         }
     }
