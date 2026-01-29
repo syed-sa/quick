@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -40,13 +41,10 @@ public class ServicesController {
     }
 
     @PostMapping(value = "/register", consumes = "multipart/form-data")
-    public ResponseEntity<?> registerService(@ModelAttribute RegisterBusinessDto service) {
-        try {
+    public ResponseEntity<?> registerService(@RequestHeader("Idempotency-Key") String idempotencyKey,@ModelAttribute RegisterBusinessDto service) {
+       
             _registerServicesService.registerBusiness(service);
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
     }
 
     @GetMapping("/suggestions")
