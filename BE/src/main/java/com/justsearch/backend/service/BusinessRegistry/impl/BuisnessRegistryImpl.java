@@ -29,7 +29,6 @@ import com.justsearch.backend.repository.CategoryRepository;
 import com.justsearch.backend.repository.ServicesRepository;
 import com.justsearch.backend.repository.UserRepository;
 import com.justsearch.backend.service.BusinessRegistry.BuisnessRegistry;
-import com.justsearch.backend.service.Notification.Impl.NotificationServiceImpl;
 
 @Service
 public class BuisnessRegistryImpl implements BuisnessRegistry {
