@@ -3,11 +3,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.io.File;
 import com.justsearch.backend.constants.AppConstants;
 import com.justsearch.backend.service.QuickServices.impl.BookServiceImpl;
+import com.justsearch.backend.service.idempotency.IdempotencyInterceptor;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
@@ -15,7 +17,12 @@ public class WebConfig implements WebMvcConfigurer {
     private String basePath;
     private static final Logger log = LoggerFactory.getLogger(BookServiceImpl.class);
 
-    
+
+    private final IdempotencyInterceptor idempotencyInterceptor;
+
+    public WebConfig(IdempotencyInterceptor idempotencyInterceptor) {
+        this.idempotencyInterceptor = idempotencyInterceptor;
+    }
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Add trailing slash - this is crucial!
@@ -39,5 +46,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations(imageLocation)
                 .setCachePeriod(3600)
                 .resourceChain(true);
+    }
+     @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(idempotencyInterceptor)
+                .addPathPatterns("/api/**");
     }
 }
