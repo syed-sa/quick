@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
 import com.justsearch.backend.dto.ServiceDto;
-import com.justsearch.backend.model.Services;
 import com.justsearch.backend.service.QuickServices.UserFavoriteService;
 @RestController
 @RequestMapping("api/users/{userId}/favorites")
