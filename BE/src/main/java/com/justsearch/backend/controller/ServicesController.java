@@ -17,13 +17,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.justsearch.backend.dto.CategorySuggestionDto;
+import com.justsearch.backend.dto.PageResponse;
 import com.justsearch.backend.dto.RegisterBusinessDto;
 import com.justsearch.backend.dto.ServiceDto;
+import com.justsearch.backend.model.CachedResponse;
 import com.justsearch.backend.service.BusinessRegistry.BuisnessRegistry;
 import com.justsearch.backend.service.BusinessRegistry.BusinessCategoryService;
 import com.justsearch.backend.service.QuickServices.BookService;
+import com.justsearch.backend.service.idempotency.IdempotencyService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @RestController
 @RequestMapping("api/services")
@@ -33,18 +39,36 @@ public class ServicesController {
     public BuisnessRegistry _registerServicesService;
     public BusinessCategoryService _categoryService;
     public BookService _bookService;
+    private IdempotencyService idempotencyService;
 
-    public ServicesController(BuisnessRegistry registerServicesService, BusinessCategoryService categoryService, BookService bookService) {
+    public ServicesController(BuisnessRegistry registerServicesService, BusinessCategoryService categoryService,
+            BookService bookService, IdempotencyService idempotencyService) {
         this._registerServicesService = registerServicesService;
         this._categoryService = categoryService;
         this._bookService = bookService;
+        this.idempotencyService = idempotencyService;
     }
 
     @PostMapping(value = "/register", consumes = "multipart/form-data")
-    public ResponseEntity<?> registerService(@RequestHeader("Idempotency-Key") String idempotencyKey,@ModelAttribute RegisterBusinessDto service) {
-       
-            _registerServicesService.registerBusiness(service);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<String> registerService(
+            @ModelAttribute RegisterBusinessDto service,
+            HttpServletRequest request) {
+
+        _registerServicesService.registerBusiness(service);
+
+        String body = """
+                {"message":"Service registered successfully"}
+                """;
+
+        String redisKey = (String) request.getAttribute("IDEMPOTENCY_KEY");
+
+        if (redisKey != null) {
+            idempotencyService.saveResponse(
+                    redisKey,
+                    new CachedResponse(200, body));
+        }
+
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/suggestions")
@@ -62,8 +86,7 @@ public class ServicesController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
-            Page<ServiceDto> services = _bookService.getResults(keyWord, postalCode, page, size);
-            services.getContent().forEach(service -> System.out.println("Company Name: " + service.getCompanyName()));
+            PageResponse<ServiceDto> services = _bookService.getResults(keyWord, postalCode, page, size);
             return ResponseEntity.ok(services);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -114,17 +137,15 @@ public class ServicesController {
     }
 
     @GetMapping("/all")
-public ResponseEntity<?> getAllServices(
-        @RequestParam(required = false) String category   // nullable
-) {
-    try {
-        List<ServiceDto> services = _bookService.getAllServices(category);
-        return ResponseEntity.ok(services);
-    } catch (Exception e) {
-        return ResponseEntity.internalServerError().body(e.getMessage());
+    public ResponseEntity<?> getAllServices(
+            @RequestParam(required = false) String category // nullable
+    ) {
+        try {
+            List<ServiceDto> services = _bookService.getAllServices(category);
+            return ResponseEntity.ok(services);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
     }
-}
 
 }
-
-

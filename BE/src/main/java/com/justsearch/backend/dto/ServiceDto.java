@@ -3,7 +3,7 @@ package com.justsearch.backend.dto;
 import java.util.List;
 
     
-public class ServiceDto {
+public class ServiceDto implements java.io.Serializable {
     private long id;
     private long userId;
     private String companyName;
