@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.justsearch.backend.constants.AppConstants;
 import com.justsearch.backend.dto.BookingDetailsDto;
+import com.justsearch.backend.dto.PageResponse;
 import com.justsearch.backend.dto.ServiceDto;
 import com.justsearch.backend.mapper.BookingDetailsMapper;
 import com.justsearch.backend.mapper.ServiceMapper;
@@ -90,9 +92,9 @@ public class BookServiceImpl implements BookService {
     }
 
     // -------------------- SEARCH RESULTS --------------------
-
+    @Cacheable(value = "service-search", key = "#keyword + ':' + #postalCode + ':' + #page + ':' + #size")
     @Transactional(readOnly = true)
-    public Page<ServiceDto> getResults(String keyword, String postalCode, int page, int size) {
+    public PageResponse<ServiceDto> getResults(String keyword, String postalCode, int page, int size) {
 
         log.info("Service search initiated keyword={}, postalCode={}, page={}, size={}",
                 keyword, postalCode, page, size);
@@ -103,8 +105,16 @@ public class BookServiceImpl implements BookService {
                 .findByUnifiedKeyword(keyword, postalCode, pageable)
                 .map(serviceMapper::toDto);
 
-        log.info("Search completed resultsCount={}", result.getTotalElements());
-        return result;
+         PageResponse<ServiceDto> response =
+                new PageResponse<>(
+                        result.getContent(),
+                        result.getTotalElements(),
+                        result.getTotalPages(),
+                        result.getNumber(),
+                        result.getSize()
+                );
+        log.info("Search completed resultsCount={}", response.getTotalElements());
+        return response;
     }
 
     // -------------------- CREATE BOOKING --------------------
@@ -126,7 +136,7 @@ public class BookServiceImpl implements BookService {
         BookingDetails booking = new BookingDetails();
         booking.setCustomer(customer);
         booking.setService(service);
-        
+
         booking.setBookingStatus(AppConstants.BOOKING_STATUS_PENDING);
         booking.setDescription(dto.getDescription());
         booking.setLocation(dto.getLocation());
@@ -161,7 +171,7 @@ public class BookServiceImpl implements BookService {
     // -------------------- UPDATE BOOKING --------------------
 
     public void updateBooking(long bookingId, String status) {
-    log.info("Updating booking bookingId={}, newStatus={}", bookingId, status);
+        log.info("Updating booking bookingId={}, newStatus={}", bookingId, status);
 
         BookingDetails booking = bookingDetailsRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid booking ID"));
@@ -173,7 +183,7 @@ public class BookServiceImpl implements BookService {
 
             booking.setActive(false);
             notificationService.createBookingRejectedNotificationAsync(booking);
-                log.info("Booking deactivated bookingId={}", bookingId);
+            log.info("Booking deactivated bookingId={}", bookingId);
 
         }
 
@@ -187,19 +197,20 @@ public class BookServiceImpl implements BookService {
 
     public List<ServiceDto> getAllServices(String category) {
         if (category == null || category.trim().isEmpty()) {
-                   log.debug("Fetching all services (no category filter)");
+            log.debug("Fetching all services (no category filter)");
 
             return servicesRepository.findAll()
                     .stream()
                     .map(serviceMapper::toDto)
                     .toList();
         }
-    log.info("Fetching services for category={}", category);
+        log.info("Fetching services for category={}", category);
 
         BuisnessCategory categoryEntity = categoryRepository.findByExactKeyword(category)
-                .orElseThrow(() -> {                log.warn("Invalid category filter={}", category);
-return new IllegalArgumentException("Invalid category: " + category);
-    });
+                .orElseThrow(() -> {
+                    log.warn("Invalid category filter={}", category);
+                    return new IllegalArgumentException("Invalid category: " + category);
+                });
 
         return servicesRepository.findByBusinessCategory_Id(categoryEntity.getId())
                 .stream()

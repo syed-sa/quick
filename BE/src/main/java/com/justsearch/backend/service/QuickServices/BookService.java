@@ -1,6 +1,7 @@
 package com.justsearch.backend.service.QuickServices;
 import java.util.List;
 import com.justsearch.backend.dto.BookingDetailsDto;
+import com.justsearch.backend.dto.PageResponse;
 import com.justsearch.backend.dto.ServiceDto;
 import org.springframework.data.domain.Page;
 
@@ -20,6 +21,6 @@ public interface BookService {
 
     List<ServiceDto> getAllServices(String category);
 
-    Page<ServiceDto> getResults(String selectedKeyword, String postalCode, int page, int size);
+    PageResponse<ServiceDto> getResults(String selectedKeyword, String postalCode, int page, int size);
 
 }
