@@ -3,6 +3,8 @@ package com.justsearch.backend.service.idempotency;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import com.justsearch.backend.model.CachedResponse;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -18,33 +20,37 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request,
             HttpServletResponse response,
-            Object handler) {
+            Object handler) throws Exception {
 
         if (!"POST".equals(request.getMethod())) {
             return true;
         }
-                    System.out.println("Request URI: " + request.getRequestURI());
 
-        if (!request.getRequestURI().startsWith("/api/bookservice") && !request.getRequestURI().startsWith("/api/services")) {
-        return true;
-
-    }
+        if (!request.getRequestURI().startsWith("/api/bookservice")
+                && !request.getRequestURI().startsWith("/api/services")) {
+            return true;
+        }
 
         String key = request.getHeader("Idempotency-Key");
         if (key == null || key.isBlank()) {
             throw new IllegalArgumentException("Missing Idempotency-Key");
         }
 
-
-
         String redisKey = request.getRequestURI() + ":" + key;
 
-        if (idempotencyService.exists(redisKey)) {
-            throw new IllegalStateException("Duplicate request");
+        Object cached = idempotencyService.get(redisKey);
+
+        //  Retry → return cached response
+        if (cached instanceof CachedResponse cachedResponse) {
+            response.setStatus(cachedResponse.getStatus());
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(cachedResponse.getBody());
+            return false; //  stop controller execution
         }
 
-        request.setAttribute("IDEMPOTENCY_KEY", redisKey);
         idempotencyService.markInProgress(redisKey);
+        request.setAttribute("IDEMPOTENCY_KEY", redisKey);
         return true;
     }
 
@@ -59,10 +65,8 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         if (redisKey == null)
             return;
 
-        if (ex == null && response.getStatus() < 400) {
-            idempotencyService.markCompleted(redisKey);
-        } else {
-            idempotencyService.clear(redisKey); // allow retry
+        if (ex != null || response.getStatus() >= 400) {
+            idempotencyService.clear(redisKey);
         }
     }
 
