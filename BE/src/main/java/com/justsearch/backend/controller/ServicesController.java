@@ -25,11 +25,7 @@ import com.justsearch.backend.service.BusinessRegistry.BuisnessRegistry;
 import com.justsearch.backend.service.BusinessRegistry.BusinessCategoryService;
 import com.justsearch.backend.service.QuickServices.BookService;
 import com.justsearch.backend.service.idempotency.IdempotencyService;
-
 import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 
 @RestController
 @RequestMapping("api/services")

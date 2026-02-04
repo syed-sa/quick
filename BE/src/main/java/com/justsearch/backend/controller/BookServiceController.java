@@ -9,24 +9,41 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.justsearch.backend.dto.BookingDetailsDto;
+import com.justsearch.backend.model.CachedResponse;
 import com.justsearch.backend.service.QuickServices.BookService;
+import com.justsearch.backend.service.idempotency.IdempotencyService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("api/bookservice")
 public class BookServiceController {
 
     private BookService _bookService;
+    private IdempotencyService idempotencyService;
 
-    public BookServiceController(BookService bookService) {
+    public BookServiceController(BookService bookService, IdempotencyService idempotencyService) {
         _bookService = bookService;
+        this.idempotencyService = idempotencyService;
     }
 
     @PostMapping("/RequestBooking")
-    public ResponseEntity<?> bookService(@RequestBody BookingDetailsDto bookServiceDto) {
+    public ResponseEntity<?> bookService(@RequestBody BookingDetailsDto bookServiceDto, HttpServletRequest request) {
         try {
 
             _bookService.createBookingRequest(bookServiceDto);
-            return ResponseEntity.ok().build();
+            String body = """
+                    {"message":"Booking created successfully"}
+                    """;
+
+            String redisKey = (String) request.getAttribute("IDEMPOTENCY_KEY");
+
+            if (redisKey != null) {
+                idempotencyService.saveResponse(
+                        redisKey,
+                        new CachedResponse(200, body));
+            }
+            return ResponseEntity.ok().body(body);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error Booking service: " + e.getMessage());
         }
@@ -51,10 +68,19 @@ public class BookServiceController {
     }
 
     @PostMapping("/UpdateBookingStatus/{bookingId}")
-    public ResponseEntity<?> updateBooking(@PathVariable long bookingId, @RequestParam String status) {
+    public ResponseEntity<?> updateBooking(@PathVariable long bookingId, @RequestParam String status, HttpServletRequest request) {
         try {
             _bookService.updateBooking(bookingId, status);
-            return ResponseEntity.ok().build();
+            String body = """
+                    {"message":"Booking updated successfully"}
+                    """;
+            String redisKey = (String) request.getAttribute("IDEMPOTENCY_KEY");
+            if (redisKey != null) {
+                idempotencyService.saveResponse(
+                        redisKey,
+                        new CachedResponse(200, body));
+            }
+            return ResponseEntity.ok().body(body);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error updating booking: " + e.getMessage());
         }

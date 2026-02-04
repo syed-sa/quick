@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,8 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
     /// @param registerServices The DTO containing business registration details
     /// @throws RuntimeException if registration fails
     /// @return void
+    @CacheEvict(value = "service-search", allEntries = true)
+
     public void registerBusiness(RegisterBusinessDto registerServices) {
         try {
             log.info("Register business request received userId={}, companyName={}",
@@ -156,6 +159,7 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
         return serviceDtos;
     }
 
+    @CacheEvict(value = "service-search", allEntries = true)
     public void updateService(ServiceDto service) {
         log.info("Update service request serviceId={}", service != null ? service.getId() : null);
 
