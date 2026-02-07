@@ -21,6 +21,7 @@ import com.justsearch.backend.dto.PageResponse;
 import com.justsearch.backend.dto.RegisterBusinessDto;
 import com.justsearch.backend.dto.ServiceDto;
 import com.justsearch.backend.model.CachedResponse;
+import com.justsearch.backend.ratelimit.annotation.RateLimit;
 import com.justsearch.backend.service.BusinessRegistry.BuisnessRegistry;
 import com.justsearch.backend.service.BusinessRegistry.BusinessCategoryService;
 import com.justsearch.backend.service.QuickServices.BookService;
@@ -44,7 +45,7 @@ public class ServicesController {
         this._bookService = bookService;
         this.idempotencyService = idempotencyService;
     }
-
+@RateLimit(key = "REGISTER_SERVICE", capacity = 5, refillTokens = 5, refillDurationSeconds = 3600, perUser = true)
     @PostMapping(value = "/register", consumes = "multipart/form-data")
     public ResponseEntity<String> registerService(
             @ModelAttribute RegisterBusinessDto service,
@@ -67,14 +68,17 @@ public class ServicesController {
         return ResponseEntity.ok(body);
     }
 
+    @RateLimit(key = "SUGGESTIONS", capacity = 30, refillTokens = 30, refillDurationSeconds = 60)
     @GetMapping("/suggestions")
     public ResponseEntity<List<String>> getSuggestions(@RequestParam String q) {
         if (q == null || q.trim().length() < 3) {
             return ResponseEntity.ok(Collections.emptyList());
         }
         return ResponseEntity.ok(_bookService.getGlobalSuggestions(q));
+    
     }
 
+    @RateLimit(key = "SEARCH", capacity = 60, refillTokens = 60, refillDurationSeconds = 60)
     @GetMapping("/getByCategory")
     public ResponseEntity<?> getServicesByKeyword(
             @RequestParam String keyWord,
