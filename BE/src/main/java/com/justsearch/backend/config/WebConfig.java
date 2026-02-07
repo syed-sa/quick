@@ -8,9 +8,9 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.io.File;
 import com.justsearch.backend.constants.AppConstants;
+import com.justsearch.backend.ratelimit.RateLimitInterceptor;
 import com.justsearch.backend.service.QuickServices.impl.BookServiceImpl;
 import com.justsearch.backend.service.idempotency.IdempotencyInterceptor;
-import org.springframework.web.servlet.HandlerInterceptor;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
