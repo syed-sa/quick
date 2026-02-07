@@ -10,6 +10,7 @@ import java.io.File;
 import com.justsearch.backend.constants.AppConstants;
 import com.justsearch.backend.service.QuickServices.impl.BookServiceImpl;
 import com.justsearch.backend.service.idempotency.IdempotencyInterceptor;
+import org.springframework.web.servlet.HandlerInterceptor;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
@@ -19,9 +20,12 @@ public class WebConfig implements WebMvcConfigurer {
 
 
     private final IdempotencyInterceptor idempotencyInterceptor;
+    private final RateLimitInterceptor rateLimitInterceptor;
 
-    public WebConfig(IdempotencyInterceptor idempotencyInterceptor) {
+
+    public WebConfig(IdempotencyInterceptor idempotencyInterceptor, RateLimitInterceptor rateLimitInterceptor) {
         this.idempotencyInterceptor = idempotencyInterceptor;
+        this.rateLimitInterceptor = rateLimitInterceptor;
     }
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -49,6 +53,35 @@ public class WebConfig implements WebMvcConfigurer {
     }
      @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        
+    /*
+     * 1️⃣ Rate limiting — ONLY critical endpoints
+     */
+    registry.addInterceptor(rateLimitInterceptor)
+            .addPathPatterns(
+                    // Auth
+                    "/api/user/signup",
+                    "/api/user/signin",
+                    "/api/user/forgot-password",
+                    "/api/user/reset-password",
+                    "/api/user/refresh",
+
+                    // Search & suggestions
+                    "/api/services/getByCategory",
+                    "/api/services/suggestions",
+                    "/api/services/category/suggestions",
+
+                    // Mutations
+                    "/api/services/register",
+                    "/api/bookservice/RequestBooking",
+                    "/api/bookservice/UpdateBookingStatus/**"
+            )
+            .excludePathPatterns(
+                    "/images/**",
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+            );
         registry.addInterceptor(idempotencyInterceptor)
                 .addPathPatterns("/api/**");
     }
