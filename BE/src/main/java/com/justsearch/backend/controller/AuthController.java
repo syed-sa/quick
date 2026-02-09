@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.justsearch.backend.dto.SignInDto;
 import com.justsearch.backend.dto.SignupRequestDto;
+import com.justsearch.backend.ratelimit.annotation.RateLimit;
 import com.justsearch.backend.service.Authentication.AuthService;
 
 import java.util.Map;
@@ -27,6 +28,7 @@ public class AuthController {
 
     }
 
+    @RateLimit(key = "SIGNUP", capacity = 5, refillTokens = 5, refillDurationSeconds = 3600)
     @PostMapping("/signup")
 
     public ResponseEntity<Map<String, String>> SignupUser(@RequestBody SignupRequestDto request) {
@@ -44,6 +46,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Email verified successfully"));
     }
 
+    @RateLimit(key = "SIGNIN", capacity = 5, refillTokens = 5, refillDurationSeconds = 3600)
     @PostMapping("/signin")
     public ResponseEntity<?> signIn(@RequestBody SignInDto signInCredentials) {
         return _authService.userSignIn(signInCredentials);
@@ -72,6 +75,7 @@ public class AuthController {
         }
     }
 
+    @RateLimit(key = "FORGOT_PASSWORD", capacity = 3, refillTokens = 3, refillDurationSeconds = 3600)
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         _authService.forgotPassword(email);

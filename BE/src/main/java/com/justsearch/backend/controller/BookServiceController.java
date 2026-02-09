@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.justsearch.backend.dto.BookingDetailsDto;
 import com.justsearch.backend.model.CachedResponse;
+import com.justsearch.backend.ratelimit.annotation.RateLimit;
 import com.justsearch.backend.service.QuickServices.BookService;
 import com.justsearch.backend.service.idempotency.IdempotencyService;
 
@@ -27,7 +28,9 @@ public class BookServiceController {
         this.idempotencyService = idempotencyService;
     }
 
+    @RateLimit(key = "BOOK_SERVICE", capacity = 10, refillTokens = 10, refillDurationSeconds = 600, perUser = true)
     @PostMapping("/RequestBooking")
+
     public ResponseEntity<?> bookService(@RequestBody BookingDetailsDto bookServiceDto, HttpServletRequest request) {
         try {
 
@@ -59,6 +62,7 @@ public class BookServiceController {
     }
 
     @GetMapping("/GetMyBookings/{userId}")
+    
     public ResponseEntity<?> getMyBookings(@PathVariable long userId) {
         try {
             return ResponseEntity.ok(_bookService.getMyBookings(userId));
@@ -67,8 +71,10 @@ public class BookServiceController {
         }
     }
 
+    @RateLimit(key = "UPDATE_BOOKING", capacity = 20, refillTokens = 20, refillDurationSeconds = 600, perUser = true)
     @PostMapping("/UpdateBookingStatus/{bookingId}")
-    public ResponseEntity<?> updateBooking(@PathVariable long bookingId, @RequestParam String status, HttpServletRequest request) {
+    public ResponseEntity<?> updateBooking(@PathVariable long bookingId, @RequestParam String status,
+            HttpServletRequest request) {
         try {
             _bookService.updateBooking(bookingId, status);
             String body = """
