@@ -40,13 +40,13 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
 
         Object cached = idempotencyService.get(redisKey);
 
-        //  Retry → return cached response
+        // Retry → return cached response
         if (cached instanceof CachedResponse cachedResponse) {
             response.setStatus(cachedResponse.getStatus());
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(cachedResponse.getBody());
-            return false; //  stop controller execution
+            return false; // stop controller execution
         }
 
         idempotencyService.markInProgress(redisKey);

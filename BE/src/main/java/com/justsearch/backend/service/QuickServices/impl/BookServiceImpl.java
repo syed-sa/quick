@@ -155,9 +155,11 @@ public class BookServiceImpl implements BookService {
     // -------------------- FETCH BOOKINGS --------------------
 
     @Transactional(readOnly = true)
-    public List<BookingDetailsDto> getBookingRequests(long serviceProviderId) {
-        return bookingDetailsMapper.toDtoList(
-                bookingDetailsRepository.fetchBookingsWithCustomerInfo(serviceProviderId));
+    public List<BookingDetailsDto> getBookingRequests(long serviceId) {
+
+        List<BookingDetails> bookings = bookingDetailsRepository.fetchbookingbyServiceId(serviceId);
+        log.info("Fetched {} booking requests for serviceId={}", bookings.size(), serviceId);   
+        return bookingDetailsMapper.toDtoList(bookings);
     }
 
     @Transactional(readOnly = true)

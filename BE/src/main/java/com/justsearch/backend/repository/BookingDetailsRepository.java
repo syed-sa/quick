@@ -13,8 +13,8 @@ public interface BookingDetailsRepository extends JpaRepository<BookingDetails,L
        "JOIN FETCH b.customer c " +
        "JOIN FETCH b.service s " +
        "JOIN FETCH s.serviceProvider sp " +
-       "WHERE sp.id = :serviceProviderId")
-List<BookingDetails> fetchBookingsWithCustomerInfo(@Param("serviceProviderId") Long serviceProviderId);
+       "WHERE s.id = :serviceId")
+List<BookingDetails> fetchbookingbyServiceId(@Param("serviceId") Long serviceId);
 
 @Query("SELECT b FROM BookingDetails b " +
        "JOIN FETCH b.customer c " +
