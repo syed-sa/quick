@@ -12,13 +12,14 @@
   import { useState } from "react";
   import ServicesPage from "./pages/ServicePage";
   import ServiceDetailPage from "./pages/ServiceDetailPage";
-  import BusinessProfile from "./pages/BuisnessProfile";
   import BookingManagement from "./components/sections/BookingManagement";
   import NotificationPage from "./pages/Notification";
   import AdminDashboard from "./pages/Admin";
   import { useNotificationSocket } from "./hooks/useNotificationSocket";
   import VerifyEmail from "./components/auth/VerifyEmail"
   import ResetPassword from "./components/auth/ResetPassword";
+  import BuisnessProfile from "./pages/BusinessOwnerDashboard";
+import MyBookings from "./pages/MyBookings";
 
   function App() {
     const [selectedCity, setSelectedCity] = useState("Chennai");
@@ -45,13 +46,13 @@
         <Route path="/profile" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/service/:id" element={<ServiceDetailPage />} />
-        <Route path="/business-profile" element={<PrivateRoute><BusinessProfile /></PrivateRoute>} />
-        <Route path="/booking-management" element={<PrivateRoute><BookingManagement /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><NotificationPage /></PrivateRoute>} />
         <Route path="/admin" element = { <PrivateRoute><AdminDashboard/></PrivateRoute>} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/register-service" element={  <PrivateRoute><RegisterService /></PrivateRoute>} />
+        <Route path="/business-owner-dashboard" element={<PrivateRoute><BuisnessProfile /></PrivateRoute>} />
+        <Route path="/bookings-made" element={<PrivateRoute><MyBookings /></PrivateRoute>} />
       </Routes>
       <Footer />
     </div>

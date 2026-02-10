@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
-import { MapPin, User, Bell, Heart, Store, Menu, X, Shield, ChevronDown, LogOut, UserCircle, Briefcase, Calendar } from "lucide-react";
+import { MapPin, User, Bell, Heart, Store, Menu, X, Shield, ChevronDown, LogOut, UserCircle, Briefcase, Calendar,Eye,CheckCircle } from "lucide-react";
 
 const Header = ({ selectedCity, setSelectedCity }) => {
   const { user, logout } = useAuth();
@@ -118,26 +118,27 @@ const Header = ({ selectedCity, setSelectedCity }) => {
                         </Link>
 
                         <Link
-                          to="/business-profile"
+                          to="/business-owner-dashboard"
                           className="flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <Briefcase className="h-5 w-5 text-gray-400" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Business Profile</p>
+                            <p className="text-sm font-medium text-gray-700">Business </p>
                             <p className="text-xs text-gray-500">Manage your business</p>
                           </div>
                         </Link>
 
+                     
                         <Link
-                          to="/booking-management"
+                          to="/bookings-made"
                           className="flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
-                          <Calendar className="h-5 w-5 text-gray-400" />
+                          <CheckCircle className="h-5 w-5 text-gray-400" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Bookings</p>
-                            <p className="text-xs text-gray-500">View appointments</p>
+                            <p className="text-sm font-medium text-gray-700">My Bookings</p>
+                            <p className="text-xs text-gray-500">View your bookings</p>
                           </div>
                         </Link>
 
@@ -245,21 +246,23 @@ const Header = ({ selectedCity, setSelectedCity }) => {
                 </Link>
 
                 <Link 
-                  to="/business-profile" 
+                  to="/business-owner-dashboard" 
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Briefcase className="h-5 w-5 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">Business Profile</span>
+                  <span className="text-sm font-medium text-gray-700">Business</span>
                 </Link>
 
+     
+
                 <Link 
-                  to="/booking-management" 
+                  to="/bookings-made" 
                   className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <Calendar className="h-5 w-5 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">Bookings</span>
+                  <CheckCircle className="h-5 w-5 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">My Bookings</span>
                 </Link>
 
                 {user.role === 'ADMIN' && (
