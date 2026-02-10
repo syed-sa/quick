@@ -24,12 +24,19 @@ public class RateLimitService {
 
         // Set the rate if not already set
 
-        rateLimiter.trySetRate(RateType.OVERALL, capacity, refill, RateIntervalUnit.SECONDS);
+            if (!rateLimiter.isExists()) {
+            rateLimiter.trySetRate(
+                    RateType.OVERALL,
+                    capacity,
+                    refill,
+                    RateIntervalUnit.SECONDS
+            );
+        }
 
-        System.out.println("Permits before acquire: " + rateLimiter.availablePermits());
-        // Try to acquire a permit
         if (!rateLimiter.tryAcquire()) {
-            throw new RateLimitExceededException("Rate limit exceeded for key: " + key);
+            throw new RateLimitExceededException(
+                    "Rate limit exceeded for key: " + key
+            );
         }
     }
 }
