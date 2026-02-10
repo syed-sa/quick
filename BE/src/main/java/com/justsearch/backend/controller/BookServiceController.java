@@ -22,6 +22,7 @@ public class BookServiceController {
 
     private BookService _bookService;
     private IdempotencyService idempotencyService;
+    private static final org.slf4j.Logger _logger = org.slf4j.LoggerFactory.getLogger(BookServiceController.class);
 
     public BookServiceController(BookService bookService, IdempotencyService idempotencyService) {
         _bookService = bookService;
@@ -52,11 +53,15 @@ public class BookServiceController {
         }
     }
 
-    @GetMapping("/GetBookingRequests/{userId}")
-    public ResponseEntity<?> getBookingRequests(@PathVariable long userId) {
+    @GetMapping("/GetBookingRequests/{serviceId}")
+    public ResponseEntity<?> getBookingRequests(@PathVariable long serviceId) {
         try {
-            return ResponseEntity.ok(_bookService.getBookingRequests(userId));
+            _logger.info("Fetching booking requests for service ID: " + serviceId);
+            var response = _bookService.getBookingRequests(serviceId);
+            _logger.info("Successfully fetched booking requests for service ID: " + serviceId);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
+            _logger.error("Error fetching booking requests for service ID: " + serviceId, e);   
             return ResponseEntity.internalServerError().body("Error fetching booking requests: " + e.getMessage());
         }
     }
