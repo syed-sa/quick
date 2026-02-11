@@ -13,6 +13,7 @@ public class RateLimitService {
 
     private final RedissonClient redissonClient;
     private static final String RATE_LIMITER_KEY_PREFIX = "rate-limit:";
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RateLimitService.class);
 
     public RateLimitService(RedissonClient redissonClient) {
         this.redissonClient = redissonClient;
@@ -22,6 +23,8 @@ public class RateLimitService {
         String rateLimitKey = RATE_LIMITER_KEY_PREFIX + key;
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(rateLimitKey);
 
+        logger.info("Consuming rate limit for key: {}, capacity: {}, refill: {}, seconds: {}", key, capacity, refill, seconds);
+        
         // Set the rate if not already set
 
             if (!rateLimiter.isExists()) {
