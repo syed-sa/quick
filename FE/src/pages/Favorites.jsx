@@ -90,7 +90,6 @@ const Favorites = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
-            <Heart className="w-8 h-8 text-red-500 fill-current" />
             <h1 className="text-4xl font-bold text-gray-900">Your Favorites</h1>
           </div>
           <p className="text-gray-600 text-lg">
