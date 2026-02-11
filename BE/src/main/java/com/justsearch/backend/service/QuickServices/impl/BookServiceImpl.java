@@ -1,7 +1,9 @@
 package com.justsearch.backend.service.QuickServices.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -105,14 +107,12 @@ public class BookServiceImpl implements BookService {
                 .findByUnifiedKeyword(keyword, postalCode, pageable)
                 .map(serviceMapper::toDto);
 
-         PageResponse<ServiceDto> response =
-                new PageResponse<>(
-                        result.getContent(),
-                        result.getTotalElements(),
-                        result.getTotalPages(),
-                        result.getNumber(),
-                        result.getSize()
-                );
+        PageResponse<ServiceDto> response = new PageResponse<>(
+                result.getContent(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.getNumber(),
+                result.getSize());
         log.info("Search completed resultsCount={}", response.getTotalElements());
         return response;
     }
@@ -158,7 +158,7 @@ public class BookServiceImpl implements BookService {
     public List<BookingDetailsDto> getBookingRequests(long serviceId) {
 
         List<BookingDetails> bookings = bookingDetailsRepository.fetchbookingbyServiceId(serviceId);
-        log.info("Fetched {} booking requests for serviceId={}", bookings.size(), serviceId);   
+        log.info("Fetched {} booking requests for serviceId={}", bookings.size(), serviceId);
         return bookingDetailsMapper.toDtoList(bookings);
     }
 
@@ -208,16 +208,23 @@ public class BookServiceImpl implements BookService {
         }
         log.info("Fetching services for category={}", category);
 
-        BuisnessCategory categoryEntity = categoryRepository.findByExactKeyword(category)
-                .orElseThrow(() -> {
-                    log.warn("Invalid category filter={}", category);
-                    return new IllegalArgumentException("Invalid category: " + category);
-                });
+        Optional<List<BuisnessCategory>> categoryEntities = categoryRepository.findByExactKeyword(category);
+        if (categoryEntities.isEmpty()) {
+            log.warn("Invalid category filter={}", category);
+            throw new IllegalArgumentException("Invalid category: " + category);
+        }
 
-        return servicesRepository.findByBusinessCategory_Id(categoryEntity.getId())
-                .stream()
-                .map(serviceMapper::toDto)
-                .toList();
+        List<ServiceDto> services = new ArrayList<>();
+        for (BuisnessCategory cat : categoryEntities.get()) {
+
+            BuisnessCategory categoryEntity = cat;
+            services.addAll(servicesRepository.findByBusinessCategory_Id(categoryEntity.getId())
+                    .stream()
+                    .map(serviceMapper::toDto)
+                    .toList());
+        }
+
+        return services;
     }
 
 }

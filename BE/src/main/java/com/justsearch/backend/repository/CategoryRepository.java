@@ -27,7 +27,7 @@ public interface CategoryRepository extends JpaRepository<BuisnessCategory, Long
                             JOIN c.keywords k
                             WHERE LOWER(k) = LOWER(:selectedKeyword)
                         """)
-        Optional<BuisnessCategory> findByExactKeyword(@Param("selectedKeyword") String selectedKeyword);
+        Optional<List<BuisnessCategory>> findByExactKeyword(@Param("selectedKeyword") String selectedKeyword);
 
         @Query("""
                             SELECT DISTINCT c
