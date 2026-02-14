@@ -77,6 +77,20 @@ const NotificationPage = () => {
     }
   };
 
+  const closeNotification = async (notificationId) => {
+  try {
+    await api.post(`notifications/deactivate/${notificationId}`);
+
+    // Remove from UI instantly
+    setNotifications((prev) =>
+      prev.filter((notif) => notif.id !== notificationId)
+    );
+  } catch (error) {
+    console.error("Error closing notification:", error);
+  }
+};
+
+
   const markAllAsRead = () => {
     setNotifications(notifications.map((notif) => ({ ...notif, read: true })));
   };
@@ -151,33 +165,39 @@ const NotificationPage = () => {
                     !notification.read ? "bg-blue-50" : ""
                   }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      {getNotificationIcon(notification.notificationType)}
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className={`text-sm font-medium ${
-                            !notification.read
-                              ? "text-gray-900"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {notification.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {notification.timestamp &&
-                          !isNaN(new Date(notification.timestamp))
-                            ? formatDistanceToNow(
-                                new Date(notification.timestamp),
-                                { addSuffix: true }
-                              )
-                            : "Invalid date"}
-                        </p>
-                      </div>
-                    </div>
+         <div className="flex items-start justify-between">
+        <div className="flex items-start space-x-3">
+          {getNotificationIcon(notification.notificationType)}
+          <div className="flex-1 min-w-0">
+            <h3
+              className={`text-sm font-medium ${
+                !notification.read ? "text-gray-900" : "text-gray-700"
+              }`}
+            >
+              {notification.title}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              {notification.message}
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              {notification.timestamp &&
+              !isNaN(new Date(notification.timestamp))
+                ? formatDistanceToNow(new Date(notification.timestamp), {
+                    addSuffix: true,
+                  })
+                : "Invalid date"}
+            </p>
+          </div>
+        </div>
+
+        {/* Close Button */}
+        <button
+          onClick={() => closeNotification(notification.id)}
+          className="text-gray-400 hover:text-red-500 transition-colors ml-2"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
                     {!notification.read && (
                       <button
                         onClick={() => markAsRead(notification.id)}

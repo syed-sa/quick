@@ -14,4 +14,7 @@ public interface NotificationService {
 
     public void createBookingRejectedNotificationAsync(BookingDetails bookingDetails);
 
+
+    void deactivateNotification(Long notificationId);
+
 }

@@ -1,4 +1,5 @@
 package com.justsearch.backend.controller;
+
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ public class NotificationController {
     public NotificationController(NotificationService notificationService) {
         _notificationService = notificationService;
     }
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<NotificationDto>> getNotificationsForUser(@PathVariable Long userId) {
         List<NotificationDto> notifications = _notificationService.getNotificationsForUser(userId);
@@ -26,6 +28,12 @@ public class NotificationController {
     @PostMapping("/read/{notificationId}")
     public ResponseEntity<Void> markNotificationAsRead(@PathVariable Long notificationId) {
         _notificationService.markNotificationAsRead(notificationId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/deactivate/{notificationId}")
+    public ResponseEntity<Void> deactivateNotification(@PathVariable Long notificationId) {
+        _notificationService.deactivateNotification(notificationId);
         return ResponseEntity.noContent().build();
     }
 }

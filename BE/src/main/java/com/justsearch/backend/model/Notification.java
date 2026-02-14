@@ -1,4 +1,5 @@
-package  com.justsearch.backend.model;
+package com.justsearch.backend.model;
+
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -11,11 +12,11 @@ import jakarta.persistence.Id;
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    
+
     private Long id;
     private String notificationTitle;
     private String notificationType;
-    private Long userId; 
+    private Long userId;
     private String message;
     private long bookingId;
     @Column(name = "`read`")
@@ -24,7 +25,8 @@ public class Notification {
     private LocalDateTime timestamp;
     @Column(name = "priority")
     private String priority;
-
+    @Column(name = "is_active")
+    private boolean isActive = true;
 
     public Long getId() {
         return id;
@@ -49,10 +51,12 @@ public class Notification {
     public void setMessage(String message) {
         this.message = message;
     }
+
     public long getBookingId() {
         return bookingId;
     }
-    public void setBookingId(long  bookingId) {
+
+    public void setBookingId(long bookingId) {
         this.bookingId = bookingId;
     }
 
@@ -94,5 +98,13 @@ public class Notification {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
     }
 }
