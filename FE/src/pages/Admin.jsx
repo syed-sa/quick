@@ -23,6 +23,7 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
+  const [providers, setProviders] = useState([]);
   // Mock data
   const stats = {
     totalUsers: 50,
@@ -35,8 +36,10 @@ useEffect(() => {
     try {
       const res = await api.get("/bookservice/getRecentBookings");
       setBookings(res.data);
-      const userRes = await api.get("/user/getAllUsers");
+      const userRes = await api.get("/user/getAllUsers?role=USER");
       setUsers(userRes.data);
+      const providerRes = await api.get("/user/getAllUsers?role=PROVIDER");
+      setProviders(providerRes.data);
     } catch (err) {
       console.error("Failed to fetch bookings", err);
     }
@@ -45,81 +48,8 @@ useEffect(() => {
 
   fetchBookings();
 }, []);
-  const recentBookings = [
-    {
-      id: 1,
-      customer: 'John Doe',
-      provider: 'ABC Plumbing',
-      service: 'Pipe Repair',
-      date: '2025-01-28',
-      status: 'completed',
-      amount: 150
-    },
-    {
-      id: 2,
-      customer: 'Jane Smith',
-      provider: 'Quick Electricians',
-      service: 'Wiring Installation',
-      date: '2025-01-27',
-      status: 'in-progress',
-      amount: 300
-    },
-    {
-      id: 3,
-      customer: 'Mike Johnson',
-      provider: 'Clean Masters',
-      service: 'House Cleaning',
-      date: '2025-01-26',
-      status: 'pending',
-      amount: 80
-    }
-  ];
+  
 
-  //  users = [
-  //   {
-  //     id: 1,
-  //     name: 'John Doe',
-  //     email: 'john@email.com',
-  //     phone: '+1234567890',
-  //     joinDate: '2024-12-15',
-  //     totalBookings: 5,
-  //     status: 'active'
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'Jane Smith',
-  //     email: 'jane@email.com',
-  //     phone: '+1234567891',
-  //     joinDate: '2024-11-20',
-  //     totalBookings: 12,
-  //     status: 'active'
-  //   }
-  // ];
-
-  const providers = [
-    {
-      id: 1,
-      name: 'ABC Plumbing',
-      owner: 'Robert Wilson',
-      email: 'abc@plumbing.com',
-      phone: '+1234567892',
-      category: 'Plumbing',
-      rating: 4.8,
-      completedJobs: 156,
-      status: 'verified'
-    },
-    {
-      id: 2,
-      name: 'Quick Electricians',
-      owner: 'Sarah Davis',
-      email: 'quick@electric.com',
-      phone: '+1234567893',
-      category: 'Electrical',
-      rating: 4.6,
-      completedJobs: 89,
-      status: 'pending'
-    }
-  ];
 
   const StatCard = ({ icon: Icon, title, value, change }) => (
     <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -337,24 +267,12 @@ useEffect(() => {
                   <td className="px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{provider.name}</div>
-                      <div className="text-sm text-gray-500">Owner: {provider.owner}</div>
                       <div className="text-sm text-gray-500">{provider.email}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
-                      {provider.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                      <span className="ml-1 text-sm text-gray-900">{provider.rating}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{provider.completedJobs}</td>
                   <td className="px-6 py-4">
-                    <StatusBadge status={provider.status} />
+                    <StatusBadge status={"samradaya"} />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
