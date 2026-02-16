@@ -1,4 +1,3 @@
-import { useState } from "react";
 import api from "../components/auth/axios";
 import {
   Building2,
@@ -14,6 +13,8 @@ import {
   Upload,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { useState, useEffect, useRef } from "react";
+import useDebounce from "../hooks/useDebounce";
 
 const RegisterService = () => {
   const [formData, setFormData] = useState({
@@ -32,34 +33,59 @@ const RegisterService = () => {
   const [categorySuggestions, setCategorySuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const debouncedCategory = useDebounce(categoryInput, 500);
+  const abortControllerRef = useRef(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   // Fetch category suggestions
-  const fetchCategorySuggestions = async (value) => {
-    if (value.trim().length < 2) {
+  useEffect(() => {
+    if (debouncedCategory.trim().length < 2) {
       setCategorySuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
-    try {
-      const res = await api.get(`services/category/suggestions?q=${value}`);
-      setCategorySuggestions(res.data);
-      setShowSuggestions(true);
-    } catch (err) {
-      console.error("Category suggestion error", err);
-      toast.error("Failed to fetch categories");
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
-  };
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const fetchSuggestions = async () => {
+      try {
+        const res = await api.get(
+          `services/category/suggestions?q=${debouncedCategory}`,
+          {
+            signal: controller.signal,
+          },
+        );
+
+        setCategorySuggestions(res.data);
+        setShowSuggestions(true);
+      } catch (err) {
+        if (err.name !== "CanceledError") {
+          console.error("Category suggestion error", err);
+          toast.error("Failed to fetch categories");
+        }
+      }
+    };
+
+    fetchSuggestions();
+
+    return () => controller.abort();
+  }, [debouncedCategory]);
 
   const handleImageChange = (e) => {
     const newFiles = Array.from(e.target.files);
-    
+
     // Validate file types
-    const validFiles = newFiles.filter(file => {
-      const isValid = file.type.startsWith('image/');
+    const validFiles = newFiles.filter((file) => {
+      const isValid = file.type.startsWith("image/");
       if (!isValid) {
         toast.warning(`${file.name} is not a valid image file`);
       }
@@ -118,36 +144,32 @@ const RegisterService = () => {
     });
 
     try {
-      const res = await fetch("http://localhost:8080/api/services/register", {
-        method: "POST",
-        body: form,
+      await api.post("/services/register", form, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
         },
       });
 
-      if (res.ok) {
-        toast.success("Business registered successfully!");
-        // Reset form
-        setFormData({
-          businessName: "",
-          category: "",
-          phone: "",
-          email: "",
-          address: "",
-          postalCode: "",
-          city: "Chennai",
-          images: [],
-        });
-        setCategoryInput("");
-        setSelectedCategory(null);
-      } else {
-        const error = await res.text();
-        toast.error(error || "Failed to register business");
-      }
+      toast.success("Business registered successfully!");
+
+      setFormData({
+        businessName: "",
+        category: "",
+        phone: "",
+        email: "",
+        address: "",
+        postalCode: "",
+        city: "Chennai",
+        images: [],
+      });
+
+      setCategoryInput("");
+      setSelectedCategory(null);
     } catch (err) {
       console.error("Error submitting form:", err);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(
+        err.response?.data || "Something went wrong. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -166,7 +188,8 @@ const RegisterService = () => {
               List Your Business
             </h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Join thousands of successful businesses. Get discovered by customers actively searching for your services.
+              Join thousands of successful businesses. Get discovered by
+              customers actively searching for your services.
             </p>
           </div>
         </div>
@@ -174,7 +197,9 @@ const RegisterService = () => {
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="bg-gradient-to-r from-orange-400 to-red-500 px-8 py-4">
-            <h2 className="text-xl font-semibold text-white">Business Information</h2>
+            <h2 className="text-xl font-semibold text-white">
+              Business Information
+            </h2>
           </div>
 
           <div className="p-8 space-y-6">
@@ -229,9 +254,10 @@ const RegisterService = () => {
                     const value = e.target.value;
                     setCategoryInput(value);
                     setSelectedCategory(null);
-                    fetchCategorySuggestions(value);
                   }}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  onBlur={() =>
+                    setTimeout(() => setShowSuggestions(false), 200)
+                  }
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   required
                 />
@@ -253,7 +279,9 @@ const RegisterService = () => {
                         className="px-4 py-3 cursor-pointer hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-b-0"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-700 font-medium">{cat.name}</span>
+                          <span className="text-gray-700 font-medium">
+                            {cat.name}
+                          </span>
                           {selectedCategory?.id === cat.id && (
                             <CheckCircle className="w-4 h-4 text-green-500" />
                           )}
@@ -349,7 +377,7 @@ const RegisterService = () => {
               <label className="block text-sm font-semibold text-gray-700">
                 Business Images <span className="text-red-500">*</span>
               </label>
-              
+
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-400 transition-colors">
                 <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <label className="cursor-pointer">
