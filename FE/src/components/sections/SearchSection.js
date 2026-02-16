@@ -1,8 +1,10 @@
 import { MapPin } from "lucide-react";
 import LocationAutocomplete from "./LocationAutocomplete";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import useDebounce from "../../hooks/useDebounce";
+import axios from "../auth/axios";
 
 const SearchSection = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -12,32 +14,36 @@ const SearchSection = () => {
 
   const navigate = useNavigate();
 
+  // ✅ Debounced value
+  const debouncedCategory = useDebounce(category, 500);
+
   const handleLocationSelect = ({ postalCode, area }) => {
     setSelectedLocation({ postalCode, area });
   };
 
-  const fetchSuggestions = async (value) => {
-    if (value.trim().length < 3) {
-      setSuggestions([]);
-      return;
-    }
+  // ✅ Moved fetch logic inside useEffect
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (debouncedCategory.trim().length < 3) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
 
-    try {
-      const res = await fetch(
-        `http://localhost:8080/api/services/suggestions?q=${value}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      const data = await res.json();
-      setSuggestions(data);
-      setShowSuggestions(true);
-    } catch (err) {
-      console.error("Suggestion fetch error", err);
-    }
-  };
+      try {
+        const res = await axios.get(
+          `/services/suggestions?q=${debouncedCategory}`,
+        );
+
+        setSuggestions(res.data); // 👈 axios uses .data
+        setShowSuggestions(true);
+      } catch (err) {
+        console.error("Suggestion fetch error", err);
+      }
+    };
+
+    fetchSuggestions();
+  }, [debouncedCategory]);
 
   const handleSearch = () => {
     if (!selectedLocation || !category.trim()) {
@@ -46,7 +52,7 @@ const SearchSection = () => {
     }
 
     navigate(
-      `/services?keyWord=${category}&postalCode=${selectedLocation.postalCode}&area=${selectedLocation.area}`
+      `/services?keyWord=${category}&postalCode=${selectedLocation.postalCode}&area=${selectedLocation.area}`,
     );
   };
 
@@ -75,8 +81,7 @@ const SearchSection = () => {
                   value={category}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setCategory(value);
-                    fetchSuggestions(value);
+                    setCategory(value); // ✅ no direct API call
                   }}
                   onBlur={() =>
                     setTimeout(() => setShowSuggestions(false), 150)
@@ -84,7 +89,7 @@ const SearchSection = () => {
                 />
               </div>
 
-              {/* Suggestions */}
+              {/* Suggestions — EXACTLY YOUR OLD STYLE */}
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-40 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden">
                   <ul className="max-h-64 overflow-y-auto divide-y">
@@ -103,8 +108,6 @@ const SearchSection = () => {
                           }}
                           className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-red-50 transition group"
                         >
-
-                          {/* Text */}
                           <span className="text-sm text-gray-700 group-hover:text-red-600">
                             {matchIndex !== -1 ? (
                               <>
@@ -112,7 +115,7 @@ const SearchSection = () => {
                                 <span className="font-semibold text-red-500">
                                   {s.substring(
                                     matchIndex,
-                                    matchIndex + category.length
+                                    matchIndex + category.length,
                                   )}
                                 </span>
                                 {s.substring(matchIndex + category.length)}
