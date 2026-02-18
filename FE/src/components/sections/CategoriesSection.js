@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+
 const CategoriesSection = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [hoveredQuickLinks, setHoveredQuickLinks] = useState(false);
   const navigate = useNavigate();
+  
   const categories = [
     {
       id: "Home food",
@@ -75,6 +79,38 @@ const CategoriesSection = () => {
           <p className="text-gray-600 text-sm max-w-lg mx-auto">
             Discover local businesses and services in your area
           </p>
+          
+          {/* Quick Links Hover Button - New Addition */}
+          <div className="mt-6 flex justify-center">
+            <Link
+              to="/quick-links"
+              className="relative group inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-orange-400 via-yellow-400 to-red-500 text-white font-medium rounded-full shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105"
+              onMouseEnter={() => setHoveredQuickLinks(true)}
+              onMouseLeave={() => setHoveredQuickLinks(false)}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                🔗 Quick Links
+                <svg 
+                  className={`w-4 h-4 transition-transform duration-300 ${hoveredQuickLinks ? 'translate-x-1' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+              
+              {/* Glittering effect */}
+              <span className="absolute inset-0 bg-gradient-to-r from-orange-400 via-yellow-400 to-red-500 rounded-full blur-md opacity-0 group-hover:opacity-50 transition-opacity duration-500 animate-pulse"></span>
+              
+              {/* Sparkle elements */}
+              <span className={`absolute -top-1 -right-1 text-yellow-200 text-xs transition-all duration-500 ${hoveredQuickLinks ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>✨</span>
+              <span className={`absolute -bottom-1 -left-1 text-yellow-200 text-xs transition-all duration-500 delay-100 ${hoveredQuickLinks ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>✨</span>
+              
+              {/* Animated gradient overlay */}
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12 animate-shimmer"></span>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
@@ -132,6 +168,21 @@ const CategoriesSection = () => {
           </button>
         </div>
       </div>
+
+      {/* Add custom animation CSS */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%) skewX(-12deg);
+          }
+          100% {
+            transform: translateX(200%) skewX(-12deg);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+      `}</style>
     </section>
   );
 };

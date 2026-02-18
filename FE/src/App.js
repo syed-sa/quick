@@ -20,6 +20,7 @@
   import ResetPassword from "./components/auth/ResetPassword";
   import BuisnessProfile from "./pages/BusinessOwnerDashboard";
 import MyBookings from "./pages/MyBookings";
+import QuickLinksPage from "./pages/QuickLinksPage";
 
   function App() {
     const [selectedCity, setSelectedCity] = useState("Chennai");
@@ -53,6 +54,7 @@ import MyBookings from "./pages/MyBookings";
         <Route path="/register-service" element={  <PrivateRoute><RegisterService /></PrivateRoute>} />
         <Route path="/business-owner-dashboard" element={<PrivateRoute><BuisnessProfile /></PrivateRoute>} />
         <Route path="/bookings-made" element={<PrivateRoute><MyBookings /></PrivateRoute>} />
+        <Route path="/quick-links" element={<QuickLinksPage />} />
       </Routes>
       <Footer />
     </div>
