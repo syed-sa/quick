@@ -1,7 +1,7 @@
 package com.justsearch.backend.constants;
 
 public class AppConstants {
-    public static final String USER_DATA = "/userdata";
+    public static final String SERVICE_DATA = "/ServiceData";
     public static final String IMAGE_TEMPLATE = "/img_%d.jpg";
     public static final String IMAGE_FOLDER = "/images/";
     public static final String BOOKING_STATUS_PENDING = "pending";

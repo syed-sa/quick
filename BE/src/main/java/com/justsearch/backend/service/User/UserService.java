@@ -11,4 +11,6 @@ public interface UserService {
     UserDto getCurrentUserProfile();
 
     UserDto updateCurrentUserProfile(UpdateUserProfileRequest request);
+
+    List<UserDto> getUsersByRole(String roleName);
 }

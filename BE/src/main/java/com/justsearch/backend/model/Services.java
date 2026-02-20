@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -43,16 +44,20 @@ public class Services {
     private String address;
 
     private String postalCode;
-    @ElementCollection  
+    @ElementCollection
     private List<String> keywords;
 
+    @OneToMany(mappedBy = "service", orphanRemoval = true)
+    private List<ServiceImage> images;
 
     public List<String> getKeywords() {
         return keywords;
     }
+
     public void setKeywords(List<String> keywords) {
         this.keywords = keywords;
     }
+
     public String getCompanyName() {
         return companyName;
     }
@@ -119,5 +124,14 @@ public class Services {
 
     public long getId() {
         return id;
+    }
+
+    public List<ServiceImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<ServiceImage> images) {
+        this.images = images;
+
     }
 }

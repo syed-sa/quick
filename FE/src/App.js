@@ -46,7 +46,7 @@ import QuickLinksPage from "./pages/QuickLinksPage";
         <Route path="/favourites" element={  <Favorites />} />
         <Route path="/profile" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
         <Route path="/services" element={<ServicesPage />} />
-        <Route path="/service/:id" element={<ServiceDetailPage />} />
+        <Route path="/service-details/:id" element={<ServiceDetailPage />} />
         <Route path="/notifications" element={<PrivateRoute><NotificationPage /></PrivateRoute>} />
         <Route path="/admin" element = { <PrivateRoute><AdminDashboard/></PrivateRoute>} />
         <Route path="/verify-email" element={<VerifyEmail />} />

@@ -69,4 +69,10 @@ public class UserServiceImpl implements UserService{
                         .collect(Collectors.toSet())
         );
     }
+
+    public List<UserDto> getUsersByRole(String roleName) {
+        return userRepository.findByRoles_Name(roleName).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
 }

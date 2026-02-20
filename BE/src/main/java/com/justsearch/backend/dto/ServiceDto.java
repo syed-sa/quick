@@ -14,6 +14,7 @@ public class ServiceDto implements java.io.Serializable {
     private String address;
     private String postalCode;
     private List<String> keywords;
+    private List<String> images;
 
     public List<String> getKeywords() {
         return keywords;
@@ -92,6 +93,12 @@ public class ServiceDto implements java.io.Serializable {
     }
     public void setId(long id) {
         this.id = id;
+    }
+    public List<String> getImages() {
+        return images;
+    }
+    public void setImages(List<String> images) {
+        this.images = images;
     }
 
 }

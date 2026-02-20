@@ -1,6 +1,10 @@
 package com.justsearch.backend.dto;
+
 public class RefreshRequestDto {
     private String refreshToken;
+
+    public RefreshRequestDto() {
+    }
 
     public RefreshRequestDto(String refreshToken) {
         this.refreshToken = refreshToken;
