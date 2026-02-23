@@ -23,25 +23,29 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response,
-                             Object handler) {
+            HttpServletResponse response,
+            Object handler) {
 
-        if (!(handler instanceof HandlerMethod method)) {
+
+        // 1. Skip if it's not a controller method
+        if (!(handler instanceof HandlerMethod method))
             return true;
-        }
+
+        // 2. SKIP OPTIONS REQUESTS (CORS pre-flight)
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod()))
+            return true;
         logger.info("RateLimitInterceptor triggered for: " + request.getRequestURI());
         RateLimit rateLimit = method.getMethodAnnotation(RateLimit.class);
         System.out.println("RateLimit annotation found: " + (rateLimit != null));
 
-        if (rateLimit == null) return true;
+        if (rateLimit == null)
+            return true;
 
         String key = resolveKey(request, rateLimit);
         rateLimitService.consume(
                 key,
-                rateLimit.capacity(),
-                rateLimit.refillTokens(),
-                rateLimit.refillDurationSeconds()
-        );
+                rateLimit.permits(),
+                rateLimit.durationSeconds());
 
         return true;
     }

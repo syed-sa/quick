@@ -1,26 +1,52 @@
-import { useState } from "react";
+// components/auth/AuthForm.jsx
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import SignInForm from "./SignInForm";
 import SignUpForm from "./SignUpForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
+
 const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showForgot, setShowForgot] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Get redirect info from location state
+  const from = location.state?.from || "/";
+  const message = location.state?.message || "";
+
+  useEffect(() => {
+    // Show the message if it exists
+    if (message) {
+      toast.info(message, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  }, [message]);
+
+  // Function to handle successful login/signup
+  const handleAuthSuccess = () => {
+    navigate(from, { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-20 via-red-20 to-pink-20 flex items-center justify-center px-4 py-8">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl overflow-hidden grid md:grid-cols-2">
-        {/* Left Side - Image Section */}
+        {/* Left Side - Image Section (unchanged) */}
         <div className="hidden md:block relative overflow-hidden">
-          {/* Replace this URL with your chosen image from Unsplash */}
           <img
             src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop"
             alt="Local business"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-red-500/90 to-orange-600/90"></div>
 
-          {/* Content overlay */}
           <div className="relative h-full flex flex-col justify-center items-center p-12 text-white">
             <div className="text-center max-w-md">
               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
@@ -110,6 +136,7 @@ const AuthForm = () => {
               Welcome to Quick
             </h2>
           </div>
+          
           {!showForgot && (
             <>
               <div className="mb-8">
@@ -151,9 +178,12 @@ const AuthForm = () => {
           {showForgot ? (
             <ForgotPasswordForm onBack={() => setShowForgot(false)} />
           ) : isLogin ? (
-            <SignInForm onForgotPassword={() => setShowForgot(true)} />
+            <SignInForm 
+              onForgotPassword={() => setShowForgot(true)} 
+              onSuccess={handleAuthSuccess}
+            />
           ) : (
-            <SignUpForm />
+            <SignUpForm onSuccess={handleAuthSuccess} />
           )}
 
           <div className="mt-6 text-center">

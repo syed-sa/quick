@@ -45,7 +45,7 @@ public class ServicesController {
         this._bookService = bookService;
         this.idempotencyService = idempotencyService;
     }
-@RateLimit(key = "REGISTER_SERVICE", capacity = 5, refillTokens = 5, refillDurationSeconds = 3600, perUser = true)
+@RateLimit(key = "REGISTER_SERVICE", permits = 5, durationSeconds = 3600, perUser = true)
     @PostMapping(value = "/register", consumes = "multipart/form-data")
     public ResponseEntity<String> registerService(
             @ModelAttribute RegisterBusinessDto service,
@@ -68,7 +68,7 @@ public class ServicesController {
         return ResponseEntity.ok(body);
     }
 
-    @RateLimit(key = "SUGGESTIONS", capacity = 30, refillTokens = 30, refillDurationSeconds = 60)
+    @RateLimit(key = "SUGGESTIONS", permits = 30, durationSeconds = 60)
     @GetMapping("/suggestions")
     public ResponseEntity<List<String>> getSuggestions(@RequestParam String q) {
         if (q == null || q.trim().length() < 3) {
@@ -78,7 +78,7 @@ public class ServicesController {
     
     }
 
-    @RateLimit(key = "SEARCH", capacity = 60, refillTokens = 60, refillDurationSeconds = 60)
+    @RateLimit(key = "SEARCH", permits = 60, durationSeconds = 60)
     @GetMapping("/getByCategory")
     public ResponseEntity<?> getServicesByKeyword(
             @RequestParam String keyWord,
@@ -93,20 +93,7 @@ public class ServicesController {
         }
     }
 
-    @GetMapping("/getImages")
-    public ResponseEntity<?> getImages(@RequestParam long serviceId) {
-        {
-            try {
-                // Assuming you have a method to fetch images from the folder path
-                List<String> images = _registerServicesService.getImages(serviceId);
-                return ResponseEntity.ok(images);
-            } catch (Exception e) {
-                return ResponseEntity.internalServerError().body("Error fetching images: " + e.getMessage());
-            }
-        }
-
-    }
-
+    //service provider gets all his services
     @GetMapping("/getservice/userId/{userId}")
     public ResponseEntity<?> getServicesByUserId(@PathVariable long userId) {
         try {
@@ -120,6 +107,7 @@ public class ServicesController {
         }
     }
 
+    //service provider updates a service
     @PutMapping("/updateService")
     public ResponseEntity<?> updateService(@RequestBody ServiceDto serviceDto) {
         try {

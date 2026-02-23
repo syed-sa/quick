@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.justsearch.backend.dto.RefreshRequestDto;
 import com.justsearch.backend.dto.SignInDto;
 import com.justsearch.backend.dto.SignupRequestDto;
 import com.justsearch.backend.ratelimit.annotation.RateLimit;
@@ -28,7 +30,7 @@ public class AuthController {
 
     }
 
-    @RateLimit(key = "SIGNUP", capacity = 5, refillTokens = 5, refillDurationSeconds = 3600)
+    @RateLimit(key = "SIGNUP", permits = 5, durationSeconds = 3600, perUser = true)
     @PostMapping("/signup")
 
     public ResponseEntity<Map<String, String>> SignupUser(@RequestBody SignupRequestDto request) {
@@ -46,23 +48,21 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Email verified successfully"));
     }
 
-    @RateLimit(key = "SIGNIN", capacity = 5, refillTokens = 5, refillDurationSeconds = 3600)
+    @RateLimit(key = "SIGNIN", permits = 5, durationSeconds = 3600, perUser = true)
     @PostMapping("/signin")
     public ResponseEntity<?> signIn(@RequestBody SignInDto signInCredentials) {
         return _authService.userSignIn(signInCredentials);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@RequestBody String refreshToken) {
-        if (refreshToken == null || refreshToken.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Refresh token is required"));
+    public ResponseEntity<?> refresh(@RequestBody RefreshRequestDto request) {
+
+        if (request.getRefreshToken() == null || request.getRefreshToken().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Refresh token is required"));
         }
-        try {
-            refreshToken = refreshToken.replace("\"", "").trim();
-            return _authService.refresh(refreshToken);
-        } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
-        }
+
+        return _authService.refresh(request.getRefreshToken());
     }
 
     @PostMapping("/logout")
@@ -75,7 +75,7 @@ public class AuthController {
         }
     }
 
-    @RateLimit(key = "FORGOT_PASSWORD", capacity = 3, refillTokens = 3, refillDurationSeconds = 3600)
+    @RateLimit(key = "FORGOT_PASSWORD", permits = 3, durationSeconds = 3600, perUser = true)
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         _authService.forgotPassword(email);

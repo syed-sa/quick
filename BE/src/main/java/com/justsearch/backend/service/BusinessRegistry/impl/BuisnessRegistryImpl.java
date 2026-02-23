@@ -5,28 +5,31 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.justsearch.backend.constants.AppConstants;
 import com.justsearch.backend.dto.RegisterBusinessDto;
 import com.justsearch.backend.dto.ServiceDto;
 import com.justsearch.backend.mapper.ServiceMapper;
 import com.justsearch.backend.model.BuisnessCategory;
+import com.justsearch.backend.model.ServiceImage;
 import com.justsearch.backend.model.Services;
 import com.justsearch.backend.model.User;
 import com.justsearch.backend.repository.CategoryRepository;
+import com.justsearch.backend.repository.ServiceImageRepository;
 import com.justsearch.backend.repository.ServicesRepository;
 import com.justsearch.backend.repository.UserRepository;
 import com.justsearch.backend.service.BusinessRegistry.BuisnessRegistry;
@@ -36,6 +39,8 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
     private final ServicesRepository servicesRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final Cloudinary cloudinary;
+    private final ServiceImageRepository serviceImageRepository;
     private static final Logger log = LoggerFactory.getLogger(BuisnessRegistryImpl.class);
 
     private final ServiceMapper serviceMapper;
@@ -43,11 +48,14 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
     private String basePath;
 
     public BuisnessRegistryImpl(ServicesRepository servicesRepository, CategoryRepository categoryRepository,
-            UserRepository userRepository, ServiceMapper serviceMapper) {
+            UserRepository userRepository, ServiceMapper serviceMapper, Cloudinary cloudinary, ServiceImageRepository serviceImageRepository) {
         this.servicesRepository = servicesRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.serviceMapper = serviceMapper;
+        this.cloudinary = cloudinary;
+        this.serviceImageRepository = serviceImageRepository;
+
     }
 
     /// Register a new business service
@@ -101,11 +109,12 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
             services.setKeywords(keywords);
 
             servicesRepository.save(services);
+            services = servicesRepository.findById(services.getId()).orElseThrow();
             log.info("Business registered successfully serviceId={}, userId={}",
                     services.getId(), serviceProvider.getId());
 
             uploadImagesAsync(
-                    registerServices.getUserId(),
+                    services,
                     registerServices.getImages());
 
         } catch (Exception e) {
@@ -117,7 +126,8 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
 
         log.debug("Fetching images for serviceId={}", serviceId);
         try {
-            Path path = Path.of(basePath, AppConstants.USER_DATA, AppConstants.IMAGE_FOLDER, String.valueOf(serviceId));
+            Path path = Path.of(basePath, AppConstants.SERVICE_DATA, AppConstants.IMAGE_FOLDER,
+                    String.valueOf(serviceId));
             if (!Files.exists(path)) {
                 log.warn("Folder does not exist for service ID: " + serviceId);
                 return new ArrayList<>();
@@ -208,33 +218,41 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
     }
 
     @Async
-    public void uploadImagesAsync(
-            Long userId,
-            MultipartFile[] images) {
+    public void uploadImagesAsync(Services service, MultipartFile[] images) {
 
         if (images == null || images.length == 0) {
-            log.debug("No images to upload userId={}", userId);
-
+            log.debug("No images to upload serviceId={}", service.getId());
             return;
         }
-        log.info("Async image upload started userId={}, imageCount={}",
-                userId, images.length);
-        try {
-            String folderPath = basePath + AppConstants.USER_DATA
-                    + AppConstants.IMAGE_FOLDER + userId;
 
-            int counter = images.length;
+        log.info("Async Cloudinary upload started serviceId={}, imageCount={}",
+                service.getId(), images.length);
+
+        try {
 
             for (MultipartFile image : images) {
-                String fileName = String.format(AppConstants.IMAGE_TEMPLATE, counter--);
-                Path filePath = Path.of(folderPath, fileName);
-                Files.createDirectories(filePath.getParent());
-                Files.copy(image.getInputStream(), filePath);
+
+                Map uploadResult = cloudinary.uploader().upload(
+                        image.getBytes(),
+                        ObjectUtils.asMap(
+                                "folder", "justsearch/services/" + service.getId()));
+
+                String imageUrl = uploadResult.get("secure_url").toString();
+                String publicId = uploadResult.get("public_id").toString();
+
+                ServiceImage serviceImage = new ServiceImage();
+                serviceImage.setImageUrl(imageUrl);
+                serviceImage.setPublicId(publicId);
+                serviceImage.setService(service);
+
+                serviceImageRepository.save(serviceImage);
+
             }
-            log.info("Async image upload completed userId={}", userId);
+
+            log.info("Cloudinary upload completed serviceId={}", service.getId());
 
         } catch (Exception e) {
-            log.error("Image upload failed for user {}", userId, e);
+            log.error("Cloudinary upload failed for service {}", service.getId(), e);
         }
     }
 

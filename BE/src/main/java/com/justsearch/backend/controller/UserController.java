@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.justsearch.backend.dto.UpdateUserProfileRequest;
 import com.justsearch.backend.dto.UserDto;
@@ -17,21 +18,29 @@ import jakarta.validation.Valid;
 @RequestMapping("api/user")
 public class UserController {
 
-    private  UserService userService;
+    private UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
+    // 🔹 Get all users (admin only)
     @GetMapping("/getAllUsers")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> users = userService.getAllUsers();
-        if (users.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<List<UserDto>> getUsers(
+            @RequestParam(required = false) String role) {
+
+        List<UserDto> users;
+
+        if (role != null && !role.isBlank()) {
+            users = userService.getUsersByRole(role);
+        } else {
+            users = userService.getAllUsers();
         }
+
         return ResponseEntity.ok(users);
     }
 
+    // 🔹 Get current user profile
     @GetMapping("/myProfile")
     public ResponseEntity<UserDto> getMyProfile() {
         return ResponseEntity.ok(userService.getCurrentUserProfile());

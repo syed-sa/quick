@@ -1,3 +1,4 @@
+// components/auth/SignInForm.jsx
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -5,7 +6,7 @@ import * as Yup from "yup";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const SignInForm = ({ onForgotPassword }) => {
+const SignInForm = ({ onForgotPassword, onSuccess }) => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -31,7 +32,7 @@ const SignInForm = ({ onForgotPassword }) => {
 
   const triggerShake = () => {
     setShake(true);
-    setTimeout(() => setShake(false), 500); // reset after animation
+    setTimeout(() => setShake(false), 500);
   };
 
   const onSubmit = async (data) => {
@@ -59,7 +60,12 @@ const SignInForm = ({ onForgotPassword }) => {
         resData.role
       );
 
-      navigate("/");
+      // Call onSuccess to redirect to the original page
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       setAuthError(err.message);
     }
@@ -67,7 +73,6 @@ const SignInForm = ({ onForgotPassword }) => {
 
   return (
     <>
-      {/* Shake animation styles */}
       <style>
         {`
           @keyframes shake {
@@ -128,7 +133,7 @@ const SignInForm = ({ onForgotPassword }) => {
           )}
         </div>
 
-        {/* ⚠️ Auth Error Message */}
+        {/* Auth Error Message */}
         {authError && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             <svg

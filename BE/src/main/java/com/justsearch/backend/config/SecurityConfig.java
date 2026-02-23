@@ -93,7 +93,9 @@ public class SecurityConfig {
             "/api/user/verify-email",
             "/api/user/forgot-password",
             "/api/user/reset-password",
-            "/api/user/refresh"
+            "/api/user/refresh",
+            "/api/location/**",
+            "/api/services/suggestions/**"
     };
 
 }

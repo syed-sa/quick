@@ -29,7 +29,7 @@ public class BookServiceController {
         this.idempotencyService = idempotencyService;
     }
 
-    @RateLimit(key = "BOOK_SERVICE", capacity = 10, refillTokens = 10, refillDurationSeconds = 600, perUser = true)
+    @RateLimit(key = "BOOK_SERVICE", permits = 10, durationSeconds = 600, perUser = true)
     @PostMapping("/RequestBooking")
 
     public ResponseEntity<?> bookService(@RequestBody BookingDetailsDto bookServiceDto, HttpServletRequest request) {
@@ -76,7 +76,7 @@ public class BookServiceController {
         }
     }
 
-    @RateLimit(key = "UPDATE_BOOKING", capacity = 20, refillTokens = 20, refillDurationSeconds = 600, perUser = true)
+    @RateLimit(key = "UPDATE_BOOKING", permits = 20, durationSeconds = 600, perUser = true)
     @PostMapping("/UpdateBookingStatus/{bookingId}")
     public ResponseEntity<?> updateBooking(@PathVariable long bookingId, @RequestParam String status,
             HttpServletRequest request) {

@@ -19,27 +19,32 @@ public class RateLimitService {
         this.redissonClient = redissonClient;
     }
 
-    public void consume(String key, long capacity, long refill, long seconds) {
+    public void consume(String key, long permits, long durationSeconds) {
         String rateLimitKey = RATE_LIMITER_KEY_PREFIX + key;
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(rateLimitKey);
 
-        logger.info("Consuming rate limit for key: {}, capacity: {}, refill: {}, seconds: {}", key, capacity, refill, seconds);
-        
-        // Set the rate if not already set
-
-            if (!rateLimiter.isExists()) {
+        // CRITICAL: Only initialize if it does not exist in Redis
+        if (!rateLimiter.isExists()) {
+            logger.info("Initializing NEW bucket for key: {}", key);
             rateLimiter.trySetRate(
                     RateType.OVERALL,
-                    capacity,
-                    refill,
-                    RateIntervalUnit.SECONDS
-            );
+                    permits,
+                    durationSeconds,
+                    RateIntervalUnit.SECONDS);
+
+            // Set an expiry so unused keys are deleted from Upstash
+            rateLimiter.expire(java.time.Duration.ofHours(24));
         }
 
-        if (!rateLimiter.tryAcquire()) {
-            throw new RateLimitExceededException(
-                    "Rate limit exceeded for key: " + key
-            );
+        // Now try to acquire
+        boolean acquired = rateLimiter.tryAcquire(1);
+
+        // Use availablePermits() to see the count
+        logger.info("Key: {}, Remaining: {}", key, rateLimiter.availablePermits());
+
+        if (!acquired) {
+            throw new RateLimitExceededException("Rate limit exceeded for key: " + key);
         }
     }
+
 }
