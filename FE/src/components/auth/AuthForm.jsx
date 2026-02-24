@@ -14,21 +14,17 @@ const AuthForm = () => {
 
   // Get redirect info from location state
   const from = location.state?.from || "/";
-  const message = location.state?.message || "";
 
   useEffect(() => {
-    // Show the message if it exists
-    if (message) {
-      toast.info(message, {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-  }, [message]);
+    const msg = location.state?.message;
+    if (!msg) return;
+
+    toast.info(msg, {
+      toastId: "auth-redirect",
+    });
+
+    navigate(location.pathname, { replace: true });
+  }, [location.state, navigate, location.pathname]);
 
   // Function to handle successful login/signup
   const handleAuthSuccess = () => {
@@ -136,7 +132,7 @@ const AuthForm = () => {
               Welcome to Quick
             </h2>
           </div>
-          
+
           {!showForgot && (
             <>
               <div className="mb-8">
@@ -178,8 +174,8 @@ const AuthForm = () => {
           {showForgot ? (
             <ForgotPasswordForm onBack={() => setShowForgot(false)} />
           ) : isLogin ? (
-            <SignInForm 
-              onForgotPassword={() => setShowForgot(true)} 
+            <SignInForm
+              onForgotPassword={() => setShowForgot(true)}
               onSuccess={handleAuthSuccess}
             />
           ) : (
