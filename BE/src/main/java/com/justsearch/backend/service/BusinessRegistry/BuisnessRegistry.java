@@ -8,9 +8,6 @@ public interface BuisnessRegistry {
 
     void registerBusiness(RegisterBusinessDto registerServices);
 
-
-    List<String> getImages(long service);
-
     List<ServiceDto> getServiceByUserId(Long userId);
 
     void updateService(ServiceDto service);

@@ -1,26 +1,19 @@
 package com.justsearch.backend.service.BusinessRegistry.impl;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.justsearch.backend.constants.AppConstants;
 import com.justsearch.backend.dto.RegisterBusinessDto;
 import com.justsearch.backend.dto.ServiceDto;
 import com.justsearch.backend.mapper.ServiceMapper;
@@ -44,8 +37,6 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
     private static final Logger log = LoggerFactory.getLogger(BuisnessRegistryImpl.class);
 
     private final ServiceMapper serviceMapper;
-    @Value("${basepath}")
-    private String basePath;
 
     public BuisnessRegistryImpl(ServicesRepository servicesRepository, CategoryRepository categoryRepository,
             UserRepository userRepository, ServiceMapper serviceMapper, Cloudinary cloudinary, ServiceImageRepository serviceImageRepository) {
@@ -122,35 +113,7 @@ public class BuisnessRegistryImpl implements BuisnessRegistry {
         }
     }
 
-    public List<String> getImages(long serviceId) {
-
-        log.debug("Fetching images for serviceId={}", serviceId);
-        try {
-            Path path = Path.of(basePath, AppConstants.SERVICE_DATA, AppConstants.IMAGE_FOLDER,
-                    String.valueOf(serviceId));
-            if (!Files.exists(path)) {
-                log.warn("Folder does not exist for service ID: " + serviceId);
-                return new ArrayList<>();
-            }
-
-            String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-
-            List<Path> files = Files.list(path)
-                    .filter(Files::isRegularFile)
-                    .collect(Collectors.toList());
-
-            List<String> imageUrls = files.stream()
-                    .map(file -> baseUrl + "/images/" + serviceId + "/" + file.getFileName().toString())
-                    .collect(Collectors.toList());
-            log.debug("Images fetched count={} serviceId={}", imageUrls.size(), serviceId);
-            return imageUrls;
-
-        } catch (Exception e) {
-            log.error("Failed to fetch images serviceId={}", serviceId, e);
-
-            throw new RuntimeException("Failed to retrieve images for service ID: " + serviceId, e);
-        }
-    }
+   
 
     public List<ServiceDto> getServiceByUserId(Long userId) {
         log.debug("Fetching services for userId={}", userId);

@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.justsearch.backend.security.CustomUserDetailsService;
 
@@ -29,6 +30,8 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final Filter jwtAuthFilter;
+    @Value("${app.frontend.base-url}")
+    private String frontendUrl;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService, Filter jwtAuthFilter) {
         this.userDetailsService = userDetailsService;
@@ -45,7 +48,7 @@ public class SecurityConfig {
         return http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:3000"));
+                    config.setAllowedOrigins(List.of(frontendUrl));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.addAllowedHeader("*"); // wildcard headers
                     config.setAllowCredentials(true);
