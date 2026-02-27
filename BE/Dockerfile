@@ -1,17 +1,28 @@
-# Use lightweight Java 17 image
-FROM eclipse-temurin:17-jdk-alpine
+# ---------- Stage 1: Build ----------
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
-# Create app directory
 WORKDIR /app
 
-# Copy built jar into container
-COPY target/backend-0.0.1-SNAPSHOT.jar app.jar
+# Copy pom.xml first (better caching)
+COPY pom.xml .
 
-# Render provides dynamic PORT
-ENV PORT=8080
+# Download dependencies
+RUN mvn dependency:go-offline
 
-# Expose port (for documentation)
+# Copy source code
+COPY src ./src
+
+# Build jar
+RUN mvn clean package -DskipTests
+
+# ---------- Stage 2: Run ----------
+FROM eclipse-temurin:17-jdk-alpine
+
+WORKDIR /app
+
+# Copy jar from builder stage
+COPY --from=builder /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
 
-# Run application
 ENTRYPOINT ["java", "-jar", "app.jar"]
