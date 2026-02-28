@@ -12,6 +12,9 @@
     "editor.defaultFormatter": "redhat.java"
   },
   "editor.defaultFormatter": "vscode.php-language-features",
+  "[xml]": {
+    "editor.defaultFormatter": "mikeburgh.xml-format"
+  },
 
   
 }

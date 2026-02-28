@@ -2,93 +2,115 @@ package com.justsearch.backend.service.Notification.Impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.justsearch.backend.service.Notification.EmailProvider;
 import com.justsearch.backend.service.Notification.EmailService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
     private static final Logger log =
             LoggerFactory.getLogger(EmailServiceImpl.class);
 
-    private final JavaMailSender mailSender;
+    private final EmailProvider emailProvider;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-
-    public EmailServiceImpl(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    private String getEmailTemplate(String content, String buttonText, String buttonLink) {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f5;">
+                <table width="100%%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+                    <!-- Header with Logo -->
+                    <tr>
+                        <td style="padding: 30px 20px; text-align: center; border-bottom: 1px solid #eaeaea;">
+                            <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #f97316, #ef4444); padding: 8px 16px; border-radius: 8px;">
+                                        <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Q</span>
+                                    </td>
+                                    <td style="padding-left: 8px;">
+                                        <span style="font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #f97316, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Quick</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 20px;">
+                            %s
+                        </td>
+                    </tr>
+                    
+                    <!-- Button -->
+                    <tr>
+                        <td style="padding: 0 20px 40px 20px; text-align: center;">
+                            <a href="%s" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #f97316, #ef4444); color: #ffffff; text-decoration: none; font-weight: 500; border-radius: 8px; font-size: 16px;">%s</a>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 20px; text-align: center; border-top: 1px solid #eaeaea; color: #6b7280; font-size: 14px;">
+                            <p style="margin: 5px 0;">&copy; 2024 Quick. All rights reserved.</p>
+                            <p style="margin: 5px 0;">If you didn't request this email, you can safely ignore it.</p>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """.formatted(content, buttonLink, buttonText);
     }
-
-    // ---------------------------------------------------------
-    // VERIFICATION EMAIL
-    // ---------------------------------------------------------
 
     @Async
     @Override
     public void sendVerificationEmail(String to, String verificationLink) {
 
-        log.info("Sending verification email");
+        log.info("Preparing verification email for {}", to);
 
-        String subject = "Verify your email";
-        String body = "Welcome!\n\n" +
-                "Click the link below to verify your email:\n" +
-                verificationLink + "\n\n" +
-                "This link expires in 24 hours.";
+        String subject = "Verify your email - Quick";
 
-        sendMailInternal(to, subject, body);
+        String content = """
+            <h1 style="margin: 0 0 20px 0; font-size: 24px; color: #1f2937; text-align: center;">Welcome to Quick!</h1>
+            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563; line-height: 1.5; text-align: center;">
+                Thanks for signing up! Please verify your email address to get started with your account.
+            </p>
+            """;
 
-        log.info("Verification email dispatched");
+        String html = getEmailTemplate(content, "Verify Email", verificationLink);
+        emailProvider.send(to, subject, html);
+
+        log.info("Verification email process completed for {}", to);
     }
-
-    // ---------------------------------------------------------
-    // PASSWORD RESET EMAIL
-    // ---------------------------------------------------------
 
     @Async
     @Override
     public void sendPasswordResetEmail(String to, String resetLink) {
 
-        log.info("Sending password reset email");
+        log.info("Preparing password reset email for {}", to);
 
-        String subject = "Reset your password";
-        String body = "You requested a password reset.\n\n" +
-                "Click the link below to reset your password:\n" +
-                resetLink + "\n\n" +
-                "This link expires in 15 minutes.\n" +
-                "If you didn't request this, ignore this email.";
+        String subject = "Reset your password - Quick";
 
-        sendMailInternal(to, subject, body);
+        String content = """
+            <h1 style="margin: 0 0 20px 0; font-size: 24px; color: #1f2937; text-align: center;">Reset your password</h1>
+            <p style="margin: 0 0 20px 0; font-size: 16px; color: #4b5563; line-height: 1.5; text-align: center;">
+                We received a request to reset your password. Click the button below to choose a new one.
+            </p>
+            """;
 
-        log.info("Password reset email dispatched");
+        String html = getEmailTemplate(content, "Reset Password", resetLink);
+        emailProvider.send(to, subject, html);
+
+        log.info("Password reset email process completed for {}", to);
     }
-
-    // ---------------------------------------------------------
-    // INTERNAL MAIL SENDER
-    // ---------------------------------------------------------
-
-    private void sendMailInternal(String to, String subject, String body) {
-
-    try {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(to); // ✅ REQUIRED
-        message.setSubject(subject);
-        message.setText(body);
-
-        mailSender.send(message);
-
-        log.debug("Mail sent successfully subject={}", subject);
-
-    } catch (Exception e) {
-        log.error("Email sending failed subject={}", subject, e);
-        throw e;
-    }
-}
-
 }
