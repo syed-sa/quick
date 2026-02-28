@@ -6,33 +6,36 @@ import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
-// Utility to check if token is expired
+const BASE_URL = "https://quick-aced.onrender.com"; 
+
 function isTokenExpired(token) {
   try {
     const { exp } = jwtDecode(token);
     return Date.now() >= exp * 1000;
   } catch {
-    return true; // treat as expired if can't decode
+    return true;
   }
 }
 
-// Get a valid access token (refresh if needed)
 async function getValidToken() {
   let token = localStorage.getItem("token");
+
   if (!token || isTokenExpired(token)) {
     const refreshToken = localStorage.getItem("refreshToken");
     if (!refreshToken) throw new Error("No refresh token found");
 
     const res = await axios.post(
-      "http://localhost:8080/api/user/refresh",
-      refreshToken,
+      `${BASE_URL}/api/user/refresh`,
+      { refreshToken }, // ✅ must be object
       { headers: { "Content-Type": "application/json" } }
     );
 
     token = res.data.accessToken;
+
     localStorage.setItem("token", token);
     localStorage.setItem("refreshToken", res.data.refreshToken);
   }
+
   return token;
 }
 
@@ -45,30 +48,28 @@ export function useNotificationSocket() {
     const connectSocket = async () => {
       try {
         const token = await getValidToken();
-        if (!isMounted) return; // prevent connecting after unmount
+        if (!isMounted) return;
 
         const stompClient = new Client({
           webSocketFactory: () =>
-            new SockJS(`http://localhost:8080/ws-notify?token=${token}`),
+            new SockJS(`${BASE_URL}/ws-notify?token=${token}`), // ✅ FIXED
           reconnectDelay: 5000,
-          debug: (str) => console.log(str),
+          debug: () => {}, // silence logs in prod
         });
 
-        stompClient.onConnect = (frame) => {
-          console.log("Connected to WebSocket:", frame);
+        stompClient.onConnect = () => {
+          console.log("✅ WebSocket connected");
 
           stompClient.subscribe(`/user/queue/toast`, (message) => {
-            console.log("Received toast message:", message.body);
             try {
               const notification = JSON.parse(message.body);
-              console.log("Parsed notification:", notification);
 
               toast.info(notification.body, {
                 autoClose: 4000,
                 position: "top-right",
               });
             } catch (error) {
-              console.error("Error parsing notification:", error);
+              console.error("Notification parse error:", error);
             }
           });
         };
@@ -84,7 +85,7 @@ export function useNotificationSocket() {
         stompClient.activate();
         stompClientRef.current = stompClient;
       } catch (err) {
-        console.error("Failed to connect WebSocket:", err);
+        console.error("WebSocket connection failed:", err);
       }
     };
 
@@ -93,7 +94,6 @@ export function useNotificationSocket() {
     return () => {
       isMounted = false;
       if (stompClientRef.current?.active) {
-        console.log("🔌 Disconnecting WebSocket...");
         stompClientRef.current.deactivate();
       }
     };

@@ -1,6 +1,6 @@
 import axios from "axios";
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: "https://quick-aced.onrender.com/api/",
 });
 
 // Attach access token
@@ -74,8 +74,8 @@ api.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post(
-          "http://localhost:8080/api/user/refresh",
+        const response = await api.post(
+          "user/refresh",
           { refreshToken },
           { headers: { "Content-Type": "application/json" } }
         );

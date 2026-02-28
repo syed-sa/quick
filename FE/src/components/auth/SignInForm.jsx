@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import api from "./axios";
 
 const SignInForm = ({ onForgotPassword, onSuccess }) => {
   const { login } = useAuth();
@@ -39,35 +40,27 @@ const SignInForm = ({ onForgotPassword, onSuccess }) => {
     setAuthError(null);
 
     try {
-      const response = await fetch("http://localhost:8080/api/user/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const resData = await response.json();
-
-      if (!response.ok) {
-        triggerShake();
-        throw new Error("Incorrect email or password");
-      }
+      const response = await api.post("user/signin", data);
+      const resData = response.data;
 
       login(
         resData.accessToken,
         resData.refreshToken,
         resData.userName,
         resData.userId,
-        resData.role
+        resData.role,
       );
 
-      // Call onSuccess to redirect to the original page
       if (onSuccess) {
         onSuccess();
       } else {
         navigate("/");
       }
     } catch (err) {
-      setAuthError(err.message);
+      triggerShake();
+      setAuthError(
+        err.response?.data?.message || "Incorrect email or password",
+      );
     }
   };
 
@@ -107,9 +100,7 @@ const SignInForm = ({ onForgotPassword, onSuccess }) => {
             placeholder="example@mail.com"
           />
           {errors.email && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.email.message}
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
           )}
         </div>
 

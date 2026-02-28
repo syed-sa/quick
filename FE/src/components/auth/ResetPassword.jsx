@@ -1,5 +1,6 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import axios from "./axios";
 
 const ResetPassword = () => {
   const [params] = useSearchParams();
@@ -11,18 +12,28 @@ const ResetPassword = () => {
   const submit = async (e) => {
     e.preventDefault();
 
-    await fetch(
-      `http://localhost:8080/api/user/reset-password?token=${token}&newPassword=${password}`,
-      { method: "POST" }
-    );
+    try {
+      await axios.post("user/reset-password", null, {
+        params: {
+          token,
+          newPassword: password,
+        },
+      });
 
-    alert("Password reset successful");
-    navigate("/auth");
+      alert("Password reset successful");
+      navigate("/auth");
+    } catch (error) {
+      console.error(error);
+      alert("Reset failed");
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <form onSubmit={submit} className="bg-white p-8 rounded-xl shadow-xl space-y-4">
+      <form
+        onSubmit={submit}
+        className="bg-white p-8 rounded-xl shadow-xl space-y-4"
+      >
         <h2 className="text-xl font-bold">Set new password</h2>
 
         <input

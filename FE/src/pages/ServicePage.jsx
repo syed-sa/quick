@@ -26,7 +26,7 @@ const ServicesPage = () => {
       if (viewAll) {
         try {
           const response = await api.get(
-            "http://localhost:8080/api/services/all",
+            "services/all",
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -45,7 +45,7 @@ const ServicesPage = () => {
       if (!viewAll && category) {
         try {
           const response = await api.get(
-            "http://localhost:8080/api/services/all",
+            "services/all",
             { params: { category } }
           );
           setServices(response.data || []);
@@ -64,7 +64,7 @@ const ServicesPage = () => {
       }
       try {
         const response = await api.get(
-          "http://localhost:8080/api/services/getByCategory",
+          "services/getByCategory",
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; 
+import api from "../components/auth/axios";
 
 const AuthContext = createContext();
 
@@ -27,26 +28,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
-    const accessToken = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refreshToken");
 
-    try {
-      await fetch("http://localhost:8080/api/user/logout", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-          "x-refresh-token": refreshToken,
-        },
-      });
-    } catch (err) {
-      console.warn("Logout API failed, continuing cleanup");
-    }
+  try {
+    await api.post("/user/logout", null, {
+      headers: {
+        "x-refresh-token": refreshToken,
+      },
+    });
+  } catch (err) {
+    console.warn("Logout API failed, continuing cleanup");
+  }
 
-    localStorage.clear();
-    setUser(null);
-    navigate("/auth", { replace: true });
-  };
+  localStorage.clear();
+  setUser(null);
+  navigate("/auth", { replace: true });
+};
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");

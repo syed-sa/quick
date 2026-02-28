@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "../auth/axios";
 
 const ForgotPasswordForm = ({ onBack }) => {
   const [email, setEmail] = useState("");
@@ -9,15 +10,11 @@ const ForgotPasswordForm = ({ onBack }) => {
     setLoading(true);
 
     try {
-      await fetch(
-        `http://localhost:8080/api/user/forgot-password?email=${email}`,
-        { method: "POST" }
-      );
-
-      alert("If the email exists, a reset link has been sent");
-      onBack();
-    } catch {
-      alert("Something went wrong");
+      await axios.post("user/forgot-password", null, {
+        params: { email },
+      });
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
