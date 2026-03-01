@@ -1,6 +1,6 @@
 import axios from "axios";
 const api = axios.create({
-  baseURL: "https://quick-aced.onrender.com/api/",
+  baseURL:process.env.REACT_APP_API_URL,
 });
 
 // Attach access token

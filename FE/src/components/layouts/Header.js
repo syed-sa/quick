@@ -14,6 +14,7 @@ import {
   UserCircle,
   Briefcase,
   CheckCircle,
+  LogIn,
 } from "lucide-react";
 
 const Header = ({ selectedCity }) => {
@@ -182,7 +183,7 @@ const Header = ({ selectedCity }) => {
                 </div>
               </div>
 
-              {/* ================= MOBILE MENU BUTTON ================= */}
+              {/* ================= MOBILE MENU BUTTON (only shows when user is logged in) ================= */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="md:hidden p-2 text-white"
@@ -191,11 +192,22 @@ const Header = ({ selectedCity }) => {
               </button>
             </>
           ) : (
+            /* ================= IMPROVED LOGIN/SIGNUP BUTTON ================= */
             <Link
               to="/auth"
-              className="hidden md:block px-4 py-2 bg-orange-500 text-white rounded-lg"
+              className="group relative px-6 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-sm font-semibold whitespace-nowrap overflow-hidden shadow-lg hover:shadow-orange-500/25 transition-all duration-300 hover:scale-105 active:scale-95"
             >
-              Login / Sign Up
+              {/* Animated background effect */}
+              <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              
+              {/* Button content */}
+              <span className="relative flex items-center justify-center space-x-2">
+                <LogIn className="h-4 w-4 group-hover:rotate-12 transition-transform duration-300" />
+                <span>Login / Sign Up</span>
+              </span>
+              
+              {/* Shine effect */}
+              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700"></span>
             </Link>
           )}
         </div>

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
-const BASE_URL = "https://quick-aced.onrender.com"; 
+const BASE_URL = process.env.REACT_APP_SOCKET_URL; 
 
 function isTokenExpired(token) {
   try {

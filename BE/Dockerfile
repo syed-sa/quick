@@ -3,22 +3,26 @@ FROM maven:3.9.6-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-# Copy pom.xml first (better caching)
+# 1. Copy only pom.xml and download dependencies first (better caching)
 COPY pom.xml .
+COPY mvnw .
+COPY .mvn .mvn
+RUN mvn dependency:go-offline -B
 
-# Download dependencies
-RUN mvn dependency:go-offline
-
-# Copy source code
+# 2. Copy source code and build
 COPY src ./src
+RUN mvn clean package -DskipTests -B
 
-# Build jar
-RUN mvn clean package -DskipTests
+# ---------- Stage 2: Runtime ----------
+FROM eclipse-temurin:21-jdk-alpine AS runtime
 
-# ---- Runtime Stage ----
-FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
+
+# Copy the built jar from the build stage
 COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
 
+# Expose port
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
