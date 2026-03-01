@@ -63,7 +63,7 @@ const UnifiedBookingManagement = () => {
 
       if(response.status == 200)
       {
-console.log("W");
+        alert("Booking status updated successfully");
       }
       // Update local state
       setBookings(prev => ({

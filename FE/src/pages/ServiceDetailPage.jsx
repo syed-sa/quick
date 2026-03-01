@@ -29,7 +29,6 @@ const ServiceDetailPage = () => {
 
   const userId = parseInt(localStorage.getItem("userId"), 10);
   const token = localStorage.getItem("token");
-console.log(id);
   const mockReviews = [
     {
       id: 1,

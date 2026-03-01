@@ -79,7 +79,6 @@ const ServicesPage = () => {
         );
 
         const pageData = response.data;
-        console.log("Services from API:", pageData.content);
 
         setServices(pageData.content || []);
       } catch (error) {

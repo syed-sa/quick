@@ -27,7 +27,6 @@ const BusinessOwnerDashboard = () => {
   // Fetch Business Profile
   useEffect(() => {
     const userId = localStorage.getItem('userId');
-    console.log("Fetching business profile for userId:", userId);
     const fetchBusinessProfile = async () => {
       try {
         const res = await api.get(`services/getservice/userId/${userId}`);

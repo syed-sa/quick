@@ -17,7 +17,6 @@ const [state, setState] = useState('');
     setLoading(true);
     try {
       const bookingDetails = { customerId, serviceId, serviceName, location : city + ',' + state, description };
-      console.log("Booking payload", JSON.stringify(bookingDetails));
      const res = await api.post('bookservice/RequestBooking', bookingDetails);
       if (res.status === 200 || res.status === 201) {
         toast.success('Booking successful!');
