@@ -13,16 +13,14 @@ const UnifiedBookingManagement = () => {
   }, []);
 
   const [filteredBookings, setFilteredBookings] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [processingId, setProcessingId] = useState(null);
   const [activeTab, setActiveTab] = useState('received');
 
-  useEffect(() => {
-    setFilteredBookings(bookings[activeTab] || []);
-  }, []);
+
 
   // Filter bookings when tab changes
   useEffect(() => {
@@ -61,7 +59,7 @@ const UnifiedBookingManagement = () => {
     
         const response =   await api.post(`bookservice/UpdateBookingStatus/${bookingId}?status=${status}`);
 
-      if(response.status == 200)
+      if(response.status === 200)
       {
         alert("Booking status updated successfully");
       }

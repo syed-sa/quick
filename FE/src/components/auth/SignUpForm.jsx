@@ -34,8 +34,9 @@ const SignUpForm = () => {
   const onSubmit = async (data) => {
     try {
       const response = await api.post("/user/signup", data);
-
+      if (response.status === 201) {
       alert("Account created! Please verify your email before login.");
+      }
       navigate("/check-email");
     } catch (err) {
       const message = err.response?.data?.message || "Something went wrong";

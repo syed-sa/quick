@@ -8,13 +8,11 @@ import {
   TrendingUp, 
   Search,
   Filter,
-  MoreHorizontal,
   Eye,
   Edit,
   Trash2,
   CheckCircle,
   XCircle,
-  Star,
   Phone,
 } from 'lucide-react';
 

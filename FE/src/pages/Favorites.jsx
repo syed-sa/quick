@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, MapPin, Trash2 } from "lucide-react";
+import { Heart } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../components/auth/axios";
 import ServiceCard from "../components/sections/ServiceCard";
@@ -8,18 +8,14 @@ import ServiceCard from "../components/sections/ServiceCard";
 const Favorites = () => {
   const [favoriteServices, setFavoriteServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [removingId, setRemovingId] = useState(null);
   const navigate = useNavigate();
 
   const userId = parseInt(localStorage.getItem("userId"));
   const token = localStorage.getItem("token");
 
   // Fetch favorites on component mount
-  useEffect(() => {
-    fetchFavorites();
-  }, []);
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     if (!userId) {
       toast.error("Please login to view favorites");
       navigate("/login");
@@ -42,36 +38,15 @@ const Favorites = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, token, navigate]);
 
-  const handleRemoveFavorite = async (serviceId) => {
-    setRemovingId(serviceId);
-    try {
-      await api.delete(`/users/${userId}/favorites/${serviceId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
 
-      // Update local state
-      setFavoriteServices(favoriteServices.filter(service => service.id !== serviceId));
-      toast.success("Removed from favorites");
-    } catch (error) {
-      console.error("Error removing favorite:", error);
-      toast.error("Failed to remove from favorites");
-    } finally {
-      setRemovingId(null);
-    }
-  };
 
-  const handleViewService = (service) => {
-    navigate(`/service/${service.id}`, {
-      state: {
-        service: service,
-        images: service.images || []
-      }
-    });
-  };
+
+
 
   if (loading) {
     return (
@@ -93,7 +68,8 @@ const Favorites = () => {
             <h1 className="text-4xl font-bold text-gray-900">Your Favorites</h1>
           </div>
           <p className="text-gray-600 text-lg">
-            {favoriteServices.length} saved {favoriteServices.length === 1 ? 'service' : 'services'}
+            {favoriteServices.length} saved{" "}
+            {favoriteServices.length === 1 ? "service" : "services"}
           </p>
         </div>
 
@@ -105,7 +81,8 @@ const Favorites = () => {
                 No Favorites Yet
               </h2>
               <p className="text-gray-600 mb-8">
-                Start exploring services and save your favorites for easy access later.
+                Start exploring services and save your favorites for easy access
+                later.
               </p>
               <button
                 onClick={() => navigate("/")}
@@ -116,24 +93,24 @@ const Favorites = () => {
             </div>
           </div>
         ) : (
-        <>
-          {/* Results Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {favoriteServices.map((service) => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
-          </div>
-
-          {/* Load More */}
-          {favoriteServices.length >= 9 && (
-            <div className="mt-10 text-center">
-              <button className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-xl transition-all font-semibold text-sm shadow-md hover:shadow-lg border border-gray-200">
-                Load More Services
-              </button>
+          <>
+            {/* Results Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {favoriteServices.map((service) => (
+                <ServiceCard key={service.id} service={service} />
+              ))}
             </div>
-          )}
-        </>
-      )}
+
+            {/* Load More */}
+            {favoriteServices.length >= 9 && (
+              <div className="mt-10 text-center">
+                <button className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-xl transition-all font-semibold text-sm shadow-md hover:shadow-lg border border-gray-200">
+                  Load More Services
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
