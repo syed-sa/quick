@@ -1,6 +1,7 @@
 package com.justsearch.backend.config;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.List;
 import jakarta.servlet.Filter;
 
@@ -48,7 +49,7 @@ public class SecurityConfig {
         return http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    List<String> allowedOrigins = Arrays.asList(frontendUrls.split(","));
+                    List<String> allowedOrigins = Arrays.asList(frontendUrl.split(","));
                     config.setAllowedOrigins(allowedOrigins);
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.addAllowedHeader("*"); // wildcard headers
