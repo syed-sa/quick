@@ -20,6 +20,7 @@
   import BuisnessProfile from "./pages/BusinessOwnerDashboard";
 import MyBookings from "./pages/MyBookings";
 import QuickLinksPage from "./pages/QuickLinksPage";
+import CheckEmail from "./components/auth/CheckEmail";
 
   function App() {
     const [selectedCity, setSelectedCity] = useState("Chennai");
@@ -42,6 +43,7 @@ import QuickLinksPage from "./pages/QuickLinksPage";
       <Routes>
         <Route path="/" element={<HomePage selectedCity={selectedCity} />} />
         <Route path="/auth" element={<AuthForm />} />
+        <Route path="/check-email" element={<CheckEmail />} />
         <Route path="/favourites" element={  <Favorites />} />
         <Route path="/profile" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
         <Route path="/services" element={<ServicesPage />} />
